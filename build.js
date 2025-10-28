@@ -16,6 +16,7 @@ esbuild.build({
   entryPoints: ['index.tsx'],
   bundle: true,
   outfile: path.join(outdir, 'index.js'),
+  jsx: 'automatic', // This is the crucial line that fixes the blank screen issue
   define: {
     // Vercel provides environment variables to the build process.
     // We read it here and embed it into the bundled JS file.
@@ -25,6 +26,7 @@ esbuild.build({
   // from a CDN via the importmap in index.html
   external: [
     'react',
+    'react/jsx-runtime', // Added to support the automatic JSX transform
     'react-dom',
     'react-dom/client',
     'recharts',
