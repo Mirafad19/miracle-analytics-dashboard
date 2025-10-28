@@ -16,26 +16,15 @@ esbuild.build({
   entryPoints: ['index.tsx'],
   bundle: true,
   outfile: path.join(outdir, 'index.js'),
-  jsx: 'automatic', // This is the crucial line that fixes the blank screen issue
+  jsx: 'automatic',
   define: {
     // Vercel provides environment variables to the build process.
     // We read it here and embed it into the bundled JS file.
     'process.env.GEMINI_API_KEY': `"${process.env.GEMINI_API_KEY}"`,
   },
-  // These packages are marked as external because they are loaded 
-  // from a CDN via the importmap in index.html
-  external: [
-    'react',
-    'react/jsx-runtime', // Added to support the automatic JSX transform
-    'react-dom',
-    'react-dom/client',
-    'recharts',
-    'xlsx',
-    '@google/genai',
-    'firebase/app',
-    'firebase/auth',
-    'firebase/*'
-  ],
+  // By removing the 'external' array, we tell esbuild to bundle
+  // all dependencies (React, Firebase, etc.) into our output file.
+  // This creates a self-contained application and is the fix for the blank screen.
 }).then(() => console.log('✅ Build successful! The \'dist\' folder is ready for deployment.'))
   .catch((err) => {
     console.error('❌ Build failed:', err);
