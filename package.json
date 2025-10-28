@@ -1,0 +1,14 @@
+{
+  "name": "financial-dashboard",
+  "version": "1.0.0",
+  "description": "Financial analytics dashboard",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "dotenv": "^16.3.1",
+    "esbuild": "^0.19.5"
+  }
+}
