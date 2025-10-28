@@ -9,8 +9,9 @@ if (!fs.existsSync(outdir)) {
   fs.mkdirSync(outdir);
 }
 
-// Copy the HTML file to the output directory, creating a complete package
+// Copy the HTML and favicon files to the output directory, creating a complete package
 fs.copyFileSync(path.join(__dirname, 'index.html'), path.join(outdir, 'index.html'));
+fs.copyFileSync(path.join(__dirname, 'favicon.svg'), path.join(outdir, 'favicon.svg'));
 
 esbuild.build({
   entryPoints: ['index.tsx'],
