@@ -1,6 +1,7 @@
 
 
-import { useState, useMemo } from 'react';
+
+import { useState, useMemo, useRef, ChangeEvent } from 'react';
 import * as XLSX from 'xlsx';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
@@ -11,7 +12,7 @@ import { PieChartComponent } from './components/PieChart';
 import { BarChartComponent } from './components/BarChart';
 import { DashboardFilters } from './components/DashboardFilters';
 import { Sidebar } from './components/Sidebar';
-import { Activity, TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut } from './components/Icons';
+import { Activity, TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut, Upload } from './components/Icons';
 import { Button } from './components/ui/Button';
 import { AiChatButton, AiChatModal } from './components/AiChat';
 import { CreatorModal } from './components/CreatorModal';
@@ -70,6 +71,7 @@ export default function Dashboard() {
   const [detailsContext, setDetailsContext] = useState<'primary' | 'compare' | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleDataUpload = (data: AllMonthsData) => {
     const normalizeRecordKeys = (records: any[]) => {
@@ -103,9 +105,86 @@ export default function Dashboard() {
     setDateRange({ start: null, end: null });
   };
   
+  const handleNewFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (event.target) {
+          event.target.value = '';
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          try {
+              const data = new Uint8Array(e.target?.result as ArrayBuffer);
+              const workbook = XLSX.read(data, { type: 'array' });
+              
+              const allMonthsData: AllMonthsData = {};
+              const monthMap = {
+                'Jan': 'January', 'Feb': 'February', 'Mar': 'March', 'Apr': 'April',
+                'May': 'May', 'Jun': 'June', 'Jul': 'July', 'Aug': 'August',
+                'Sep': 'September', 'Oct': 'October', 'Nov': 'November', 'Dec': 'December'
+              };
+              const monthOrder = Object.values(monthMap);
+      
+              const dataSheetRegex = /^([a-zA-Z]+)_Data$/i;
+              const foundMonths: { name: string; abbr: string; originalSheetName: string }[] = [];
+              const monthKeys = Object.keys(monthMap);
+      
+              workbook.SheetNames.forEach(sheetName => {
+                const match = sheetName.match(dataSheetRegex);
+                if (match) {
+                  const originalAbbr = match[1];
+                  const foundMonthKey = monthKeys.find(key => originalAbbr.toLowerCase().startsWith(key.toLowerCase()));
+      
+                  if (foundMonthKey) {
+                    const monthFullName = monthMap[foundMonthKey as keyof typeof monthMap];
+                    foundMonths.push({ name: monthFullName, abbr: originalAbbr, originalSheetName: sheetName });
+                  }
+                }
+              });
+      
+              if (foundMonths.length > 0) {
+                foundMonths.sort((a, b) => monthOrder.indexOf(a.name) - monthOrder.indexOf(b.name));
+                foundMonths.forEach(month => {
+                  const worksheet = workbook.Sheets[month.originalSheetName];
+                  const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                  allMonthsData[month.name] = { data: jsonData };
+                  const expenseSheetName = `${month.abbr}_Expenses`;
+                  const expenseSheetKey = Object.keys(workbook.Sheets).find(s => s.toLowerCase() === expenseSheetName.toLowerCase());
+                  if (expenseSheetKey) {
+                    const expenseWorksheet = workbook.Sheets[expenseSheetKey];
+                    allMonthsData[month.name].expenseCategories = XLSX.utils.sheet_to_json(expenseWorksheet);
+                  }
+                });
+              }
+      
+              if (Object.keys(allMonthsData).length === 0 && workbook.SheetNames.length > 0) {
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                let expenseCategoryData = undefined;
+                if (workbook.SheetNames.length > 1) {
+                  const secondSheetName = workbook.SheetNames[1];
+                  const expenseWorksheet = workbook.Sheets[secondSheetName];
+                  expenseCategoryData = XLSX.utils.sheet_to_json(expenseWorksheet);
+                }
+                allMonthsData['DefaultMonth'] = { data: jsonData, expenseCategories: expenseCategoryData };
+              }
+              
+              if (Object.keys(allMonthsData).length === 0) {
+                  throw new Error('No valid data sheets found.');
+              }
+              handleDataUpload(allMonthsData);
+          } catch (error) {
+              console.error('Error processing new Excel file:', error);
+          }
+      };
+      reader.readAsArrayBuffer(file);
+  };
+  
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month);
-    // If the new month is the same as the compare month, reset the compare month
     if (month === selectedCompareMonth) {
       setSelectedCompareMonth(null);
     }
@@ -406,6 +485,7 @@ export default function Dashboard() {
         name: record.Name || 'Unknown Patient',
         service: record.Purpose || 'Service Not Specified',
         amount: record['To Balance'],
+        date: record.Date,
       }))
       .sort((a, b) => b.amount - a.amount);
   }, [filteredData]);
@@ -418,6 +498,7 @@ export default function Dashboard() {
         name: record.Name || 'Unknown Patient',
         service: record.Purpose || 'Service Not Specified',
         amount: record['To Balance'],
+        date: record.Date,
       }))
       .sort((a, b) => b.amount - a.amount);
   }, [processedComparisonData, selectedCompareMonth]);
@@ -529,193 +610,182 @@ export default function Dashboard() {
         }
       });
       setSelectedSegmentData(matchingRecords);
+
     } else if (type === 'payment' && segment) {
-      const segmentData = dataToFilter.filter(record => {
+      const normalizedSegment = normalizePaymentMethod(segment);
+      const matchingRecords = dataToFilter.filter(record => {
         const mode = record['Mode'];
         const amount = record['Amt. Paid'];
-        
-        if (mode?.toLowerCase().includes('cash b/f') || 
-            mode?.toLowerCase().includes('cash balance') ||
-            mode === 'EXP' || amount <= 0) {
+        if (mode?.toLowerCase().includes('cash b/f') || mode?.toLowerCase().includes('cash balance') || mode === 'EXP' || amount <= 0) {
           return false;
         }
-        
-        const normalizedMode = normalizePaymentMethod(mode);
-        return normalizedMode === segment;
+        return normalizePaymentMethod(mode) === normalizedSegment;
       });
-      setSelectedSegmentData(segmentData);
+      setSelectedSegmentData(matchingRecords);
     } else {
       setSelectedSegmentData([]);
     }
   };
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
-  const containerClasses = "bg-[#252849]/50 backdrop-blur-lg rounded-2xl border border-white/10 p-6";
+  if (!monthlyData) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
+        <div className="text-center mb-8">
+            <div className="inline-block bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 p-3 rounded-2xl mb-4">
+              <Activity className="h-10 w-10 text-white" />
+            </div>
+            <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
+                Miracle Analytics
+            </h1>
+            <p className="text-lg text-blue-200">Financial Intelligence Dashboard for Healthcare</p>
+        </div>
+        <FileUpload onDataUploaded={handleDataUpload} />
+      </div>
+    );
+  }
+
+  const selectedMonthLabel = selectedMonth === 'DefaultMonth' ? 'Current Period' : selectedMonth;
+  const compareMonthLabel = selectedCompareMonth === 'DefaultMonth' ? 'Previous Period' : selectedCompareMonth;
 
   return (
-    <div className="min-h-screen text-white p-6">
-      <div className="relative max-w-7xl mx-auto space-y-8">
-        <header className="flex items-center justify-between">
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="relative">
-                  <Activity className="relative h-10 w-10 text-white" />
-                </div>
+    <div className="min-h-screen bg-zinc-950 text-white p-4 sm:p-6 lg:p-8">
+      <div className="max-w-screen-2xl mx-auto">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+              Financial Dashboard
+            </h1>
+            <div className="flex items-center gap-4 text-sm text-zinc-400 mt-2">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-purple-400" />
+                <span>{filteredData.length} Records</span>
               </div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                Financial Dashboard
-              </h1>
+              <div className="h-4 w-px bg-zinc-700"></div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-purple-400" />
+                <span>{selectedMonthLabel} Analysis</span>
+              </div>
             </div>
-            <Button 
-              onClick={() => signOut(auth)} 
-              className="bg-[#252849]/50 hover:bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-zinc-900 border border-zinc-800 text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2"
+              >
+                  <Upload className="h-4 w-4" />
+                  Upload New File
+              </Button>
+              <Button onClick={handleSignOut} className="bg-zinc-900 border border-zinc-800 text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+          </div>
         </header>
 
-        {monthlyData === null ? (
-            <div className="text-center py-16">
-              <div className={`${containerClasses} max-w-4xl mx-auto p-12`}>
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-4">
-                  Welcome to Miracle Analytics!
-                </h2>
-                <p className="text-xl text-blue-200 max-w-2xl mx-auto leading-relaxed mb-10">
-                  It looks like you haven't uploaded any data yet. <br /> Drag and drop your first financial report here to begin your analysis.
-                </p>
-                <FileUpload onDataUploaded={handleDataUpload} />
-              </div>
-            </div>
-        ) : (
-          <>
-            <div className="text-center -mt-4">
-              <div className="flex items-center justify-center gap-4 text-blue-200">
-                <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4" /><span>{filteredData.length} Records</span></div>
-                <div className="w-px h-4 bg-slate-600"></div>
-                <div className="flex items-center gap-2"><Calendar className="h-4 w-4" /><span>{selectedMonth === 'DefaultMonth' ? 'Single Month' : selectedMonth} Analysis</span></div>
-              </div>
-            </div>
-            
-            <div className={`${containerClasses} relative z-30`}>
-              <DashboardFilters 
-                selectedDuty={selectedDuty} 
-                onDutyChange={setSelectedDuty} 
+        <div className="bg-black/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-4 mb-8 relative z-20">
+            <DashboardFilters 
+                selectedDuty={selectedDuty}
+                onDutyChange={setSelectedDuty}
                 availableDuties={availableDuties}
                 dateRange={dateRange}
                 onDateChange={setDateRange}
-                availableMonths={availableMonths}
                 selectedMonth={selectedMonth}
                 onMonthChange={handleMonthChange}
+                availableMonths={availableMonths}
                 selectedCompareMonth={selectedCompareMonth}
                 onCompareMonthChange={setSelectedCompareMonth}
+            />
+        </div>
+
+        <main className="space-y-8">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <KPICard title="Total Income" value={kpis.income} type="income" compareValue={comparisonKpis?.income} compareLabel={compareMonthLabel} />
+            <KPICard title="Total Expenses" value={kpis.expenses} type="expense" compareValue={comparisonKpis?.expenses} compareLabel={compareMonthLabel} />
+            <KPICard title="Net Profit" value={kpis.netProfit} type="profit" compareValue={comparisonKpis?.netProfit} compareLabel={compareMonthLabel} />
+            <KPICard title="Profit Margin" value={kpis.profitMargin} type="margin" compareValue={comparisonKpis?.profitMargin} compareLabel={compareMonthLabel} />
+            <KPICard title="Total A/R" value={totalReceivables} type="receivables" count={accountsReceivable.length} />
+          </section>
+
+          <section className="bg-black border border-zinc-800 rounded-2xl p-6">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3"><div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800"><TrendingUp className="h-5 w-5 text-purple-400" /></div>Financial Performance Trends</h2>
+            <TrendChart data={mergedTrendData} compareLabel={compareMonthLabel} />
+          </section>
+
+          <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="bg-black border border-zinc-800 rounded-2xl p-6 xl:col-span-1">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-3"><div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800"><PieChartIcon className="h-5 w-5 text-purple-400" /></div>Revenue by Payment Mode</h2>
+                    <Button onClick={() => handleSegmentClick('payment', null, 'primary')} className="bg-transparent text-purple-300 hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
+                </div>
+              <PieChartComponent title="Revenue by Payment Mode" data={incomeByPayment} onSegmentClick={(segment) => handleSegmentClick('payment', segment, 'primary')} />
+            </div>
+            
+            <div className="bg-black border border-zinc-800 rounded-2xl p-6 xl:col-span-2">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3"><div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800"><Filter className="h-5 w-5 text-purple-400" /></div>Accounts Receivable</h2>
+              <BarChartComponent 
+                title="Accounts Receivable by Patient" 
+                data={accountsReceivable} 
+                compareData={comparisonAccountsReceivable} 
+                primaryLabel={selectedMonthLabel}
+                compareLabel={compareMonthLabel}
               />
             </div>
+          </section>
 
-            <div className="relative z-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <KPICard title="Total Income" value={kpis.income} type="income" compareValue={comparisonKpis.income} compareLabel={selectedCompareMonth} />
-                    <KPICard title="Total Expenses" value={kpis.expenses} type="expense" compareValue={comparisonKpis.expenses} compareLabel={selectedCompareMonth} />
-                    <KPICard title="Net Profit" value={kpis.netProfit} type="profit" compareValue={comparisonKpis.netProfit} compareLabel={selectedCompareMonth} />
-                    <KPICard title="Profit Margin" value={kpis.profitMargin} type="margin" compareValue={comparisonKpis.profitMargin} compareLabel={selectedCompareMonth} />
-                </div>
-                <div className="lg:col-span-1">
-                    <KPICard title="Total A/R" value={totalReceivables} type="receivables" count={accountsReceivable.length}/>
-                </div>
-            </div>
-
-            {mergedTrendData.length > 0 && (
-              <div className={`${containerClasses} relative z-10`}>
-                <div className="flex items-center gap-3 mb-6"><div className="p-2 bg-slate-900/50 rounded-lg border border-slate-700"><TrendingUp className="h-5 w-5 text-purple-400" /></div><h3 className="text-xl font-semibold text-white">Financial Performance Trends</h3></div>
-                <TrendChart data={mergedTrendData} compareLabel={selectedCompareMonth} />
+           <section className="bg-black border border-zinc-800 rounded-2xl p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-3"><div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800"><BarChart3 className="h-5 w-5 text-purple-400" /></div>Expense Distribution</h2>
+                <Button onClick={() => handleSegmentClick('expense', null, 'primary')} className="bg-transparent text-purple-300 hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
               </div>
-            )}
+            <PieChartComponent title="Expense Distribution" data={expensesByCategory} onSegmentClick={(segment) => handleSegmentClick('expense', segment, 'primary')} />
+          </section>
+        </main>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
-              {incomeByPayment.length > 0 && (
-                <div className={`${containerClasses} min-h-0`}>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3"><div className="p-2 bg-slate-900/50 rounded-lg border border-slate-700"><PieChartIcon className="h-5 w-5 text-green-400" /></div><h3 className="text-xl font-semibold text-white">Revenue by Payment Method</h3></div>
-                    <div className="flex items-center gap-2 text-blue-300 "><MousePointer className="h-4 w-4" /><span className="text-sm">Click for details</span></div>
-                  </div>
-                  <PieChartComponent title="" data={incomeByPayment} onSegmentClick={(segment) => handleSegmentClick('payment', segment, 'primary')} />
-                </div>
-              )}
-              {expensesByCategory.length > 0 && (
-                <div className={`${containerClasses} min-h-0`}>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3"><div className="p-2 bg-slate-900/50 rounded-lg border border-slate-700"><BarChart3 className="h-5 w-5 text-red-400" /></div><h3 className="text-xl font-semibold text-white">Expense Distribution Analysis</h3></div>
-                    <div className="flex items-center gap-2 text-blue-300 "><MousePointer className="h-4 w-4" /><span className="text-sm">Click for details</span></div>
-                  </div>
-                  <PieChartComponent title="" data={expensesByCategory} onSegmentClick={(segment) => handleSegmentClick('expense', segment, 'primary')} />
-                </div>
-              )}
-            </div>
+        <footer className="text-center pt-12 text-sm text-zinc-500">
+          <p>
+            © 2025 Miracle Analytics. All Rights Reserved. Dashboard by{' '}
+            <button onClick={() => setIsCreatorModalOpen(true)} className="text-zinc-300 hover:text-purple-400 underline underline-offset-2 transition-colors">
+              Fadahunsi Miracle
+            </button>.
+          </p>
+        </footer>
 
-            {(incomeByPayment.length > 0 || expensesByCategory.length > 0) && (
-              <div className="text-center"><Button onClick={() => { setSidebarOpen(true); setActiveSection('payment'); setSelectedSegment(null); setSelectedSegmentData([]); setDetailsContext(null); }} className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-8 py-3 text-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg"><BarChart3 className="h-5 w-5 mr-2" />Open Detailed Analytics</Button></div>
-            )}
-
-            {accountsReceivable.length > 0 && (
-              <div className="space-y-6 relative z-10">
-                <div className={containerClasses}>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-slate-900/50 rounded-lg border border-slate-700"><BarChart3 className="h-5 w-5 text-orange-400" /></div>
-                    <h3 className="text-xl font-semibold text-white">{selectedCompareMonth ? 'Top Outstanding Balances Comparison' : 'Top 10 Outstanding Patient Balances'}</h3>
-                  </div>
-                  <BarChartComponent 
-                    title="" 
-                    data={accountsReceivable}
-                    compareData={comparisonAccountsReceivable}
-                    primaryLabel={selectedMonth === 'DefaultMonth' ? 'Current' : selectedMonth}
-                    compareLabel={selectedCompareMonth}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="text-center pt-8">
-              <div className={containerClasses}>
-                <h3 className="text-lg font-semibold text-white mb-4">Update Analytics Data</h3>
-                <FileUpload onDataUploaded={handleDataUpload} />
-              </div>
-            </div>
-          </>
-        )}
+        <AiChatButton onClick={() => setIsChatOpen(true)} />
+        <AiChatModal isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} financialData={financialSummary} />
+        <CreatorModal isOpen={isCreatorModalOpen} onClose={() => setIsCreatorModalOpen(false)} />
       </div>
       
-      <footer className="text-center py-8 text-sm text-slate-400">
-        © 2025 Miracle Analytics. All Rights Reserved. &nbsp;&bull;&nbsp;
-        <button onClick={() => setIsCreatorModalOpen(true)} className="hover:text-white transition-colors underline">
-            Designed & Developed by Miracle
-        </button>
-      </footer>
-
-      {monthlyData !== null && (
-        <>
-            <Sidebar 
-                isOpen={sidebarOpen} 
-                onClose={() => { setSidebarOpen(false); setActiveSection(null); setSelectedSegment(null); setSelectedSegmentData([]); }} 
-                activeSection={activeSection} 
-                primaryMonthLabel={selectedMonth === 'DefaultMonth' ? 'Current Period' : selectedMonth}
-                paymentData={incomeByPayment} 
-                expenseData={expensesByCategory} 
-                onSegmentClick={handleSegmentClick} 
-                selectedSegmentData={selectedSegmentData}
-                selectedSegment={selectedSegment}
-                compareMonthLabel={selectedCompareMonth}
-                comparePaymentData={comparisonIncomeByPayment}
-                compareExpenseData={comparisonExpensesByCategory}
-                detailsContext={detailsContext}
-            />
-            <AiChatButton onClick={() => setIsChatOpen(true)} />
-            <AiChatModal 
-                isOpen={isChatOpen}
-                onClose={() => setIsChatOpen(false)}
-                financialData={financialSummary}
-            />
-        </>
-      )}
-       <CreatorModal isOpen={isCreatorModalOpen} onClose={() => setIsCreatorModalOpen(false)} />
+      <Sidebar 
+          isOpen={sidebarOpen}
+          onClose={() => { setSidebarOpen(false); setSelectedSegment(null); setDetailsContext(null); }}
+          activeSection={activeSection}
+          primaryMonthLabel={selectedMonthLabel}
+          paymentData={incomeByPayment}
+          expenseData={expensesByCategory}
+          onSegmentClick={handleSegmentClick}
+          selectedSegmentData={selectedSegmentData}
+          selectedSegment={selectedSegment}
+          compareMonthLabel={compareMonthLabel}
+          comparePaymentData={comparisonIncomeByPayment}
+          compareExpenseData={comparisonExpensesByCategory}
+          detailsContext={detailsContext}
+      />
+      
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleNewFileUpload} 
+        className="hidden" 
+        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+      />
     </div>
   );
 }

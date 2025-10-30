@@ -26,10 +26,10 @@ export default function LoginPage() {
     }
   };
 
-  const inputClasses = "w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all";
+  const inputClasses = "w-full px-4 py-3 bg-zinc-950 border border-zinc-800 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all";
 
   return (
-    <div className="min-h-screen bg-[#1A1D31] text-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#101010] text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto">
         <div className="text-center mb-10">
           <div className="flex items-center justify-center mb-6">
@@ -40,13 +40,13 @@ export default function LoginPage() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
             Miracle Analytics
           </h1>
-          <p className="text-lg text-blue-200">Secure Portal Access</p>
+          <p className="text-lg text-zinc-400">Secure Portal Access</p>
         </div>
 
-        <div className="bg-[#252849]/50 backdrop-blur-lg rounded-2xl border border-white/10 p-8 shadow-2xl">
+        <div className="bg-black/70 backdrop-blur-2xl rounded-2xl border border-zinc-800 p-8 shadow-2xl">
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+              <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-2">Email Address</label>
               <input
                 id="email"
                 name="email"
@@ -60,7 +60,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-zinc-300 mb-2">Password</label>
               <input
                 id="password"
                 name="password"
@@ -92,7 +92,7 @@ export default function LoginPage() {
             </div>
           </form>
         </div>
-        <footer className="text-center py-8 text-sm text-slate-500">
+        <footer className="text-center py-8 text-sm text-zinc-500">
             © 2025 Miracle Analytics. All Rights Reserved.
         </footer>
       </div>

@@ -1,11 +1,13 @@
 
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import * as XLSX from 'xlsx';
 
 interface BarChartData {
   name: string;
   service: string;
   amount: number;
+  date?: string | number;
 }
 
 interface MergedChartData {
@@ -15,6 +17,8 @@ interface MergedChartData {
   compareAmount: number | null;
   primaryService: string;
   compareService: string;
+  primaryDate: string | number | null;
+  compareDate: string | number | null;
 }
 
 interface BarChartProps {
@@ -56,19 +60,34 @@ export const BarChartComponent = ({ title, data, compareData, primaryLabel, comp
             compareAmount: compare?.amount ?? null,
             primaryService: primary?.service ?? 'N/A',
             compareService: compare?.service ?? 'N/A',
+            primaryDate: primary?.date ?? null,
+            compareDate: compare?.date ?? null,
         };
     }).sort((a,b) => (b.primaryAmount || 0) - (a.primaryAmount || 0));
   }, [data, compareData]);
+
+  const formatDate = (dateValue: any): string => {
+      if (!dateValue) return 'N/A';
+      if (typeof dateValue === 'number' && dateValue > 0) {
+          try {
+              const date = XLSX.SSF.parse_date_code(dateValue);
+              const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+              return `${date.d}-${monthNames[date.m - 1]}`;
+          } catch (e) { /* fall through */ }
+      }
+      return String(dateValue);
+  };
 
   const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-slate-900/95 backdrop-blur-xl p-4 rounded-xl border border-white/20 shadow-2xl max-w-xs">
+        <div className="bg-black/80 backdrop-blur-xl p-4 rounded-xl border border-zinc-800 shadow-2xl max-w-xs">
           <p className="text-white font-semibold mb-2">{data.fullName}</p>
           {data.primaryAmount !== null && (
             <div className="mb-1">
               <p className="text-blue-300 text-sm">{data.primaryService}</p>
+              <p className="text-zinc-400 text-xs mb-1">Date: {formatDate(data.primaryDate)}</p>
               <p className="text-orange-400 font-medium">
                 {primaryLabel}: ₦{data.primaryAmount.toLocaleString('en-NG')}
               </p>
@@ -77,6 +96,7 @@ export const BarChartComponent = ({ title, data, compareData, primaryLabel, comp
            {data.compareAmount !== null && compareLabel && (
             <div>
               <p className="text-blue-300/80 text-sm">{data.compareService}</p>
+              <p className="text-zinc-400/80 text-xs mb-1">Date: {formatDate(data.compareDate)}</p>
               <p className="text-orange-400/80 font-medium">
                 {compareLabel}: ₦{data.compareAmount.toLocaleString('en-NG')}
               </p>

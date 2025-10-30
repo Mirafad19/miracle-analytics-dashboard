@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-const baseCardClasses = "backdrop-blur-xl bg-white/10 border border-white/20 text-white rounded-2xl";
+const baseCardClasses = "bg-black border border-zinc-800 text-zinc-100 rounded-2xl";
 
 export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (

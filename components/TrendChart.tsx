@@ -19,7 +19,7 @@ export const TrendChart = ({ data, compareLabel }: TrendChartProps) => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-slate-900/95 backdrop-blur-xl p-4 rounded-xl border border-white/20 shadow-2xl">
+        <div className="bg-black/80 backdrop-blur-xl p-4 rounded-xl border border-zinc-800 shadow-2xl">
           <p className="text-white font-semibold mb-2">{`Day: ${label}`}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.stroke, opacity: entry.strokeDasharray ? 0.8 : 1 }} className="text-sm">

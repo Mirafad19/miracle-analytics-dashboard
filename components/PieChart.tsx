@@ -14,7 +14,7 @@ export const PieChartComponent = ({ title, data, onSegmentClick }: PieChartProps
     if (active && payload && payload.length) {
       const data = payload[0];
       return (
-        <div className="bg-slate-900/95 backdrop-blur-xl p-3 rounded-lg border border-white/20 shadow-xl">
+        <div className="bg-black/80 backdrop-blur-xl p-3 rounded-lg border border-zinc-800 shadow-xl">
           <p className="text-white font-medium">{data.name}</p>
           <p className="text-blue-300">₦{data.value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>

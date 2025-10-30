@@ -56,7 +56,7 @@ export const SelectTrigger = ({ className, children, ...props }: React.ButtonHTM
   if (!context) throw new Error("SelectTrigger must be used within a Select");
   
   return (
-    <button ref={context.triggerRef} onClick={() => context.setIsOpen(!context.isOpen)} className={`flex items-center justify-between w-full px-3 py-2 text-sm bg-slate-900/50 border border-slate-700 text-white rounded-md hover:bg-slate-800/60 transition-colors duration-200 ${className}`} {...props}>
+    <button ref={context.triggerRef} onClick={() => context.setIsOpen(!context.isOpen)} className={`flex items-center justify-between w-full px-3 py-2 text-sm bg-zinc-950 border border-zinc-800 text-white rounded-md hover:bg-zinc-800 transition-colors duration-200 ${className}`} {...props}>
       {children}
       <ChevronDown className={`h-4 w-4 transition-transform ${context.isOpen ? 'rotate-180' : ''}`} />
     </button>
@@ -76,7 +76,7 @@ export const SelectContent = ({ children, className, ...props }: React.HTMLAttri
   if (!context.isOpen) return null;
 
   return (
-    <div className={`absolute z-50 mt-1 w-full min-w-full left-0 bg-[#252849] backdrop-blur-lg border border-slate-700 rounded-md shadow-lg p-1 ${className}`} {...props}>
+    <div className={`absolute z-50 mt-1 w-full min-w-full left-0 bg-black backdrop-blur-lg border border-zinc-800 rounded-md shadow-lg p-1 ${className}`} {...props}>
       {children}
     </div>
   );
@@ -101,7 +101,7 @@ export const SelectItem = ({ children, value, className, ...props }: React.HTMLA
   };
   
   return (
-    <div onClick={handleSelect} className={`px-3 py-2 text-sm text-white rounded-md cursor-pointer hover:bg-slate-800/60 ${isSelected ? 'bg-blue-500/30' : ''} ${className}`} {...props}>
+    <div onClick={handleSelect} className={`px-3 py-2 text-sm text-white rounded-md cursor-pointer hover:bg-zinc-900 ${isSelected ? 'bg-blue-500/30' : ''} ${className}`} {...props}>
       {children}
     </div>
   );
