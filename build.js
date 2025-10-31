@@ -13,15 +13,19 @@ if (!fs.existsSync(outdir)) {
 fs.copyFileSync(path.join(__dirname, 'index.html'), path.join(outdir, 'index.html'));
 fs.copyFileSync(path.join(__dirname, 'favicon.svg'), path.join(outdir, 'favicon.svg'));
 
+// Vercel provides environment variables to the build process.
+// This logic makes the key retrieval more robust by checking for common naming conventions.
+const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+
 esbuild.build({
   entryPoints: ['index.tsx'],
   bundle: true,
   outfile: path.join(outdir, 'index.js'),
   jsx: 'automatic',
   define: {
-    // Vercel provides environment variables to the build process.
-    // We read it here and embed it into the bundled JS file.
-    'process.env.API_KEY': `"${process.env.API_KEY}"`,
+    // We read the key here and embed it into the bundled JS file.
+    // If no key is found, it will embed 'undefined'.
+    'process.env.API_KEY': `"${apiKey}"`,
   },
   // By removing the 'external' array, we tell esbuild to bundle
   // all dependencies (React, Firebase, etc.) into our output file.

@@ -45,18 +45,25 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const ai = useMemo(() => {
-    if (process.env.API_KEY) {
+    const apiKey = process.env.API_KEY;
+    // The build script replaces process.env.API_KEY with its string value.
+    // If the key is not set in Vercel, it becomes the string "undefined".
+    if (apiKey && apiKey !== "undefined") {
       try {
-        return new GoogleGenAI({ apiKey: process.env.API_KEY });
-      } catch (error) {
-        console.error("Failed to initialize GoogleGenAI:", error);
+        setError(null);
+        return new GoogleGenAI({ apiKey });
+      } catch (e) {
+        console.error("Failed to initialize GoogleGenAI:", e);
+        setError("Could not initialize the AI Analyst. The API key might be invalid.");
         return null;
       }
     }
-    console.warn("API_KEY environment variable not found.");
+    console.warn("API_KEY environment variable not found or is 'undefined'.");
+    setError("The AI Analyst is not configured. Please contact the administrator to set up the API key in the deployment environment.");
     return null;
   }, []);
 
@@ -75,8 +82,8 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
       setMessages([]); // Reset on open
       setIsLoading(true);
 
-      if (!ai) {
-        setMessages([{ role: 'model', content: '<p>The AI Analyst is currently unavailable. Please ensure the API key is configured correctly by the administrator.</p>' }]);
+      if (error || !ai) {
+        setMessages([{ role: 'model', content: `<p>${error || 'The AI Analyst is currently unavailable.'}</p>` }]);
         setIsLoading(false);
         return;
       }
@@ -86,7 +93,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
           const initialPrompt = `The user has opened the chat. Please greet them and offer to analyze their financial data. Here is the data for context, but do not show it to the user unless they ask for specific figures: \n\n${financialData}`;
           const response = await ai.models.generateContentStream({
             model: "gemini-2.5-flash",
-            contents: initialPrompt,
+            contents: [{ parts: [{ text: initialPrompt }] }],
             config: { systemInstruction },
           });
           
@@ -106,7 +113,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
 
       sendInitialMessage();
     }
-  }, [isOpen, ai, financialData, systemInstruction]);
+  }, [isOpen, ai, financialData, systemInstruction, error]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -117,15 +124,17 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
     const userMessage = prompt || input;
     if (!userMessage.trim() || !ai) return;
 
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
+    setMessages(newMessages);
     setInput('');
     setIsLoading(true);
 
     try {
         const fullPrompt = `CONTEXT:\n${financialData}\n\nUSER QUESTION: ${userMessage}`;
+        
         const response = await ai.models.generateContentStream({
             model: "gemini-2.5-flash",
-            contents: fullPrompt,
+            contents: [{ parts: [{ text: fullPrompt }] }],
             config: { systemInstruction }
         });
 
