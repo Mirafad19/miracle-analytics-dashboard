@@ -56,9 +56,9 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
       try {
         setError(null);
         return new GoogleGenAI({ apiKey });
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to initialize GoogleGenAI:", e);
-        setError("Could not initialize the AI Analyst. The API key might be invalid.");
+        setError(`Could not initialize the AI Analyst. The API key might be invalid. Details: ${e.message}`);
         return null;
       }
     }
@@ -83,7 +83,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
       setIsLoading(true);
 
       if (error || !ai) {
-        setMessages([{ role: 'model', content: `<p>${error || 'The AI Analyst is currently unavailable.'}</p>` }]);
+        setMessages([{ role: 'model', content: `<p class="text-red-500 dark:text-red-400">${error || 'The AI Analyst is currently unavailable.'}</p>` }]);
         setIsLoading(false);
         return;
       }
@@ -103,9 +103,10 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
           }
 
           setMessages([{ role: 'model', content }]);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error with initial AI message:', error);
-          setMessages([{ role: 'model', content: '<p>Sorry, I encountered an error. Please try again later.</p>' }]);
+          const errorMessage = error.message || 'An unknown error occurred.';
+          setMessages([{ role: 'model', content: `<p class="text-red-500 dark:text-red-400">Sorry, I encountered an error. Please check your API key and network connection. <br/><br/><strong>Details:</strong> ${errorMessage}</p>` }]);
         } finally {
           setIsLoading(false);
         }
@@ -128,6 +129,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
+    setError(null); // Clear previous errors on new submission
 
     try {
         const fullPrompt = `CONTEXT:\n${financialData}\n\nUSER QUESTION: ${userMessage}`;
@@ -143,9 +145,10 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
             newContent += chunk.text;
         }
         setMessages(prev => [...prev, { role: 'model', content: newContent }]);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error generating content:', error);
-        setMessages(prev => [...prev, { role: 'model', content: '<p>There was an issue processing your request.</p>' }]);
+        const errorMessage = error.message || 'An unknown error occurred.';
+        setMessages(prev => [...prev, { role: 'model', content: `<p class="text-red-500 dark:text-red-400">There was an issue processing your request. <br/><br/><strong>Details:</strong> ${errorMessage}</p>` }]);
     } finally {
         setIsLoading(false);
     }
