@@ -86,7 +86,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
           const initialPrompt = `The user has opened the chat. Please greet them and offer to analyze their financial data. Here is the data for context, but do not show it to the user unless they ask for specific figures: \n\n${financialData}`;
           const response = await ai.models.generateContentStream({
             model: "gemini-2.5-flash",
-            contents: [{ parts: [{ text: initialPrompt }] }],
+            contents: initialPrompt,
             config: { systemInstruction },
           });
           
@@ -125,7 +125,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
         const fullPrompt = `CONTEXT:\n${financialData}\n\nUSER QUESTION: ${userMessage}`;
         const response = await ai.models.generateContentStream({
             model: "gemini-2.5-flash",
-            contents: [{ parts: [{ text: fullPrompt }] }],
+            contents: fullPrompt,
             config: { systemInstruction }
         });
 
