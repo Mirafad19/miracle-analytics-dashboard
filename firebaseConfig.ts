@@ -7,9 +7,9 @@
 //  Go to the "Authentication" section in your Firebase project to add users.
 //  You will then be able to log in with the credentials you create.
 // ====================================================================================
-// FIX: Switched to Firebase v8 compatible imports and initialization to resolve module export errors.
-import firebase from "firebase/app";
-import "firebase/auth";
+// FIX: Switched to Firebase v8 compatibility layer to resolve module export errors.
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzftyoXX4l1GF-P-SIHORZE4uIp9zoOjw",
@@ -21,8 +21,9 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = firebase.auth();

@@ -1,6 +1,8 @@
 // FIX: Imported 'React' to make 'React.FormEvent' type available.
 import React, { useState } from 'react';
 import { auth } from '../firebaseConfig';
+// FIX: Removed unused v9 import to align with v8 compatibility layer.
+// import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Activity, AlertCircle } from './Icons';
 import { Button } from './ui/Button';
 
@@ -15,7 +17,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
     try {
-      // FIX: Updated sign-in logic to use Firebase v8 syntax, resolving a module export error.
+      // FIX: Switched to Firebase v8 compatibility method `auth.signInWithEmailAndPassword`.
       await auth.signInWithEmailAndPassword(email, password);
       // No need to redirect, the AuthProvider will handle the state change
     } catch (err: any) {

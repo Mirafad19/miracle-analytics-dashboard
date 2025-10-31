@@ -1,7 +1,10 @@
 
+
 import { useState, useMemo, useRef, ChangeEvent } from 'react';
 import * as XLSX from 'xlsx';
 import { auth } from './firebaseConfig';
+// FIX: Switched to Firebase v8 compatibility method `auth.signOut`, so this import is no longer needed.
+// import { signOut } from 'firebase/auth';
 import { FileUpload, AllMonthsData } from './components/FileUpload';
 import { KPICard } from './components/KPICard';
 import { TrendChart, MergedTrendData } from './components/TrendChart';
@@ -634,7 +637,7 @@ export default function Dashboard() {
   
   const handleSignOut = async () => {
     try {
-      // FIX: Updated sign out logic to use Firebase v8 syntax, resolving a module export error.
+      // FIX: Switched to Firebase v8 compatibility method `auth.signOut`.
       await auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
