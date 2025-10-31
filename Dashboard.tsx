@@ -1,9 +1,11 @@
 
 
 
+
+
+
 import { useState, useMemo, useRef, ChangeEvent } from 'react';
 import * as XLSX from 'xlsx';
-import { signOut } from 'firebase/auth';
 import { auth } from './firebaseConfig';
 import { FileUpload, AllMonthsData } from './components/FileUpload';
 import { KPICard } from './components/KPICard';
@@ -12,10 +14,11 @@ import { PieChartComponent } from './components/PieChart';
 import { BarChartComponent } from './components/BarChart';
 import { DashboardFilters } from './components/DashboardFilters';
 import { Sidebar } from './components/Sidebar';
-import { Activity, TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut, Upload } from './components/Icons';
+import { Activity, TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut, Upload, Sun, Moon } from './components/Icons';
 import { Button } from './components/ui/Button';
 import { AiChatButton, AiChatModal } from './components/AiChat';
 import { CreatorModal } from './components/CreatorModal';
+import { useTheme } from './ThemeContext';
 
 interface FinancialRecord {
   'Amt. Paid': number;
@@ -72,6 +75,11 @@ export default function Dashboard() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
   
   const handleDataUpload = (data: AllMonthsData) => {
     const normalizeRecordKeys = (records: any[]) => {
@@ -629,7 +637,7 @@ export default function Dashboard() {
   
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      await auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -656,41 +664,48 @@ export default function Dashboard() {
   const compareMonthLabel = selectedCompareMonth === 'DefaultMonth' ? 'Previous Period' : selectedCompareMonth;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-black dark:text-white p-4 sm:p-6 lg:p-8">
       <div className="max-w-screen-2xl mx-auto">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
             <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
               Financial Dashboard
             </h1>
-            <div className="flex items-center gap-4 text-sm text-zinc-400 mt-2">
+            <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 mt-2">
               <div className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-purple-400" />
+                <BarChart3 className="h-4 w-4 text-purple-500 dark:text-purple-400" />
                 <span>{filteredData.length} Records</span>
               </div>
-              <div className="h-4 w-px bg-zinc-700"></div>
+              <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700"></div>
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-purple-400" />
+                <Calendar className="h-4 w-4 text-purple-500 dark:text-purple-400" />
                 <span>{selectedMonthLabel} Analysis</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
+              <Button
+                onClick={toggleTheme}
+                className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white transition-colors p-2 h-auto"
+                aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              </Button>
               <Button 
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-zinc-900 border border-zinc-800 text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2"
+                className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white transition-colors flex items-center gap-2"
               >
                   <Upload className="h-4 w-4" />
                   Upload New File
               </Button>
-              <Button onClick={handleSignOut} className="bg-zinc-900 border border-zinc-800 text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
+              <Button onClick={handleSignOut} className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white transition-colors flex items-center gap-2">
                 <LogOut className="h-4 w-4" />
                 Sign Out
               </Button>
           </div>
         </header>
 
-        <div className="bg-black/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-4 mb-8 relative z-20">
+        <div className="bg-white/50 dark:bg-black/50 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 mb-8 relative z-20">
             <DashboardFilters 
                 selectedDuty={selectedDuty}
                 onDutyChange={setSelectedDuty}
@@ -714,22 +729,22 @@ export default function Dashboard() {
             <KPICard title="Total A/R" value={totalReceivables} type="receivables" count={accountsReceivable.length} />
           </section>
 
-          <section className="bg-black border border-zinc-800 rounded-2xl p-6">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3"><div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800"><TrendingUp className="h-5 w-5 text-purple-400" /></div>Financial Performance Trends</h2>
+          <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
+            <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Financial Performance Trends</h2>
             <TrendChart data={mergedTrendData} compareLabel={compareMonthLabel} />
           </section>
 
           <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <div className="bg-black border border-zinc-800 rounded-2xl p-6 xl:col-span-1">
+            <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-1">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-3"><div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800"><PieChartIcon className="h-5 w-5 text-purple-400" /></div>Revenue by Payment Mode</h2>
-                    <Button onClick={() => handleSegmentClick('payment', null, 'primary')} className="bg-transparent text-purple-300 hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
+                    <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><PieChartIcon className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Revenue by Payment Mode</h2>
+                    <Button onClick={() => handleSegmentClick('payment', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
                 </div>
               <PieChartComponent title="Revenue by Payment Mode" data={incomeByPayment} onSegmentClick={(segment) => handleSegmentClick('payment', segment, 'primary')} />
             </div>
             
-            <div className="bg-black border border-zinc-800 rounded-2xl p-6 xl:col-span-2">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3"><div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800"><Filter className="h-5 w-5 text-purple-400" /></div>Accounts Receivable</h2>
+            <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-2">
+              <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><Filter className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Accounts Receivable</h2>
               <BarChartComponent 
                 title="Accounts Receivable by Patient" 
                 data={accountsReceivable} 
@@ -740,19 +755,19 @@ export default function Dashboard() {
             </div>
           </section>
 
-           <section className="bg-black border border-zinc-800 rounded-2xl p-6">
+           <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3"><div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800"><BarChart3 className="h-5 w-5 text-purple-400" /></div>Expense Distribution</h2>
-                <Button onClick={() => handleSegmentClick('expense', null, 'primary')} className="bg-transparent text-purple-300 hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
+                <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><BarChart3 className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Expense Distribution</h2>
+                <Button onClick={() => handleSegmentClick('expense', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
               </div>
             <PieChartComponent title="Expense Distribution" data={expensesByCategory} onSegmentClick={(segment) => handleSegmentClick('expense', segment, 'primary')} />
           </section>
         </main>
 
-        <footer className="text-center pt-12 text-sm text-zinc-500">
+        <footer className="text-center pt-12 text-sm text-zinc-600 dark:text-zinc-500">
           <p>
             © 2025 Miracle Analytics. All Rights Reserved. Dashboard by{' '}
-            <button onClick={() => setIsCreatorModalOpen(true)} className="text-zinc-300 hover:text-purple-400 underline underline-offset-2 transition-colors">
+            <button onClick={() => setIsCreatorModalOpen(true)} className="text-zinc-800 dark:text-zinc-300 hover:text-purple-500 dark:hover:text-purple-400 underline underline-offset-2 transition-colors">
               Fadahunsi Miracle
             </button>.
           </p>

@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hospital Financial Dashboard</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
 <style>
   .insight-positive {
     color: #4ade80; /* Tailwind green-400 */
@@ -15,7 +20,18 @@
     color: #f87171; /* Tailwind red-400 */
     font-weight: 600;
   }
+  /* Improve visibility of the date picker icon */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(0.3);
+  }
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+  }
 </style>
+<!-- Firebase compatibility libraries loaded globally to ensure they are available before the app script runs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script type="importmap">
 {
   "imports": {
@@ -24,13 +40,12 @@
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "recharts": "https://aistudiocdn.com/recharts@^3.3.0",
     "xlsx": "https://aistudiocdn.com/xlsx@^0.18.5",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.4.0/"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0"
   }
 }
 </script>
 </head>
-<body class="bg-[#101010] font-sans">
+<body class="font-sans bg-gray-50 dark:bg-[#101010] transition-colors duration-300">
   <div id="root"></div>
   <script type="module" src="/index.js"></script>
 </body>

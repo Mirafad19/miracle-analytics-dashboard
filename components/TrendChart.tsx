@@ -1,4 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useTheme } from '../ThemeContext';
 
 export interface MergedTrendData {
   day: string;
@@ -16,11 +17,16 @@ interface TrendChartProps {
 }
 
 export const TrendChart = ({ data, compareLabel }: TrendChartProps) => {
+  const { theme } = useTheme();
+
+  const axisColor = theme === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
+  const gridColor = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-black/80 backdrop-blur-xl p-4 rounded-xl border border-zinc-800 shadow-2xl">
-          <p className="text-white font-semibold mb-2">{`Day: ${label}`}</p>
+        <div className="bg-white/80 dark:bg-black/80 backdrop-blur-xl p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-2xl text-zinc-900 dark:text-white">
+          <p className="font-semibold mb-2">{`Day: ${label}`}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.stroke, opacity: entry.strokeDasharray ? 0.8 : 1 }} className="text-sm">
               {`${entry.name}: ₦${(entry.value || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -47,11 +53,11 @@ export const TrendChart = ({ data, compareLabel }: TrendChartProps) => {
               </feMerge>
             </filter>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-          <XAxis dataKey="day" stroke="rgba(255,255,255,0.7)" fontSize={12} tick={{ fill: 'rgba(255,255,255,0.7)' }} />
-          <YAxis stroke="rgba(255,255,255,0.7)" fontSize={12} tick={{ fill: 'rgba(255,255,255,0.7)' }} tickFormatter={(value: number) => `₦${(value / 1000).toFixed(0)}k`} />
+          <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+          <XAxis dataKey="day" stroke={axisColor} fontSize={12} tick={{ fill: axisColor }} />
+          <YAxis stroke={axisColor} fontSize={12} tick={{ fill: axisColor }} tickFormatter={(value: number) => `₦${(value / 1000).toFixed(0)}k`} />
           <Tooltip content={<CustomTooltip />} />
-          <Legend formatter={(value) => <span className="text-white/80">{value}</span>} />
+          <Legend formatter={(value) => <span className="text-black/80 dark:text-white/80">{value}</span>} />
           <Line connectNulls type="monotone" dataKey="income" name="Income" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 8, style: { filter: 'url(#glow)', stroke: '#10B981' } }} />
           <Line connectNulls type="monotone" dataKey="expenses" name="Expenses" stroke="#EF4444" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 8, style: { filter: 'url(#glow)', stroke: '#EF4444' } }} />
           <Line connectNulls type="monotone" dataKey="netProfit" name="Net Profit" stroke="#3B82F6" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 8, style: { filter: 'url(#glow)', stroke: '#3B82F6' } }} />

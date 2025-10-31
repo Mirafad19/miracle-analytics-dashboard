@@ -36,7 +36,7 @@ export const KPICard = ({ title, value, type, count, compareValue, compareLabel 
   }
 
   return (
-    <div className="bg-black rounded-2xl p-4 flex flex-col justify-between min-h-40 relative overflow-hidden border border-zinc-800">
+    <div className="bg-white dark:bg-black rounded-2xl p-4 flex flex-col justify-between min-h-40 relative overflow-hidden border border-zinc-200 dark:border-zinc-800">
       <div className="flex justify-between items-start">
         <div className={`p-2 rounded-lg ${bgColor}`}>
           {icon}
@@ -44,18 +44,18 @@ export const KPICard = ({ title, value, type, count, compareValue, compareLabel 
         <div className={`w-2 h-2 rounded-full ${dotColor}`}></div>
       </div>
       <div className="mt-2">
-        <p className="text-sm text-zinc-200">{title}</p>
-        <p className="text-3xl font-extrabold text-white">{formatValue(value)}</p>
-        {count && (<p className="text-xs text-zinc-300 mt-1">{count} {count === 1 ? 'patient' : 'patients'}</p>)}
+        <p className="text-sm text-zinc-600 dark:text-zinc-200">{title}</p>
+        <p className="text-3xl font-extrabold text-black dark:text-white">{formatValue(value)}</p>
+        {count && (<p className="text-xs text-zinc-500 dark:text-zinc-300 mt-1">{count} {count === 1 ? 'patient' : 'patients'}</p>)}
 
         {hasCompare && percentageChange !== null && (
-          <div className={`flex items-center text-xs mt-1 ${percentageChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          <div className={`flex items-center text-xs mt-1 ${percentageChange >= 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
             {percentageChange >= 0 ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
             <span>{Math.abs(percentageChange).toFixed(1)}% vs {compareLabel?.substring(0, 3)}</span>
           </div>
         )}
       </div>
-      <div className="w-full bg-zinc-800 h-1 rounded-full mt-auto">
+      <div className="w-full bg-zinc-200 dark:bg-zinc-800 h-1 rounded-full mt-auto">
         <div className={`h-full rounded-full ${barColor}`} style={{ width: `${type === 'margin' ? Math.min(Math.abs(value), 100) : 100}%`}}></div>
       </div>
     </div>

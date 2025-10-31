@@ -14,9 +14,9 @@ export const PieChartComponent = ({ title, data, onSegmentClick }: PieChartProps
     if (active && payload && payload.length) {
       const data = payload[0];
       return (
-        <div className="bg-black/80 backdrop-blur-xl p-3 rounded-lg border border-zinc-800 shadow-xl">
-          <p className="text-white font-medium">{data.name}</p>
-          <p className="text-blue-300">₦{data.value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        <div className="bg-white/80 dark:bg-black/80 backdrop-blur-xl p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xl text-zinc-900 dark:text-white">
+          <p className="font-medium">{data.name}</p>
+          <p className="text-blue-500 dark:text-blue-300">₦{data.value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
       );
     }
@@ -61,7 +61,7 @@ export const PieChartComponent = ({ title, data, onSegmentClick }: PieChartProps
             iconType="square"
             iconSize={10}
             wrapperStyle={{ paddingTop: '20px', paddingBottom: '0px' }}
-            formatter={(value) => <span className="text-white text-xs pl-2 pr-4 cursor-pointer">{value}</span>}
+            formatter={(value) => <span className="text-black dark:text-white text-xs pl-2 pr-4 cursor-pointer">{value}</span>}
             onClick={handleLegendClick}
           />
         </PieChart>

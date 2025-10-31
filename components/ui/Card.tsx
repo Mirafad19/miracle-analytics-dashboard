@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-const baseCardClasses = "bg-black border border-zinc-800 text-zinc-100 rounded-2xl";
+const baseCardClasses = "bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-2xl";
 
 export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
@@ -19,7 +19,7 @@ CardHeader.displayName = "CardHeader";
 
 export const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={`text-xl font-semibold leading-none tracking-tight text-white ${className}`} {...props} />
+    <h3 ref={ref} className={`text-xl font-semibold leading-none tracking-tight text-black dark:text-white ${className}`} {...props} />
   )
 );
 CardTitle.displayName = "CardTitle";

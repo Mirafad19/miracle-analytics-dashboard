@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './AuthContext';
 import LoginPage from './components/LoginPage';
 import Dashboard from './Dashboard';
 import { Activity } from './components/Icons';
+import { ThemeProvider } from './ThemeContext';
 
 const AppContent = () => {
   const { currentUser, loading } = useAuth();
@@ -25,8 +26,10 @@ const AppContent = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import * as XLSX from 'xlsx';
+import { useTheme } from '../ThemeContext';
 
 interface BarChartData {
   name: string;
@@ -38,6 +39,10 @@ interface TooltipProps {
 }
 
 export const BarChartComponent = ({ title, data, compareData, primaryLabel, compareLabel }: BarChartProps) => {
+  const { theme } = useTheme();
+
+  const axisColor = theme === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
+  const gridColor = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
 
   const chartData: MergedChartData[] = useMemo(() => {
     const dataMap = new Map(data.map(item => [item.name, item]));
@@ -82,22 +87,22 @@ export const BarChartComponent = ({ title, data, compareData, primaryLabel, comp
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-black/80 backdrop-blur-xl p-4 rounded-xl border border-zinc-800 shadow-2xl max-w-xs">
-          <p className="text-white font-semibold mb-2">{data.fullName}</p>
+        <div className="bg-white/80 dark:bg-black/80 backdrop-blur-xl p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-2xl max-w-xs text-zinc-900 dark:text-white">
+          <p className="font-semibold mb-2">{data.fullName}</p>
           {data.primaryAmount !== null && (
             <div className="mb-1">
-              <p className="text-blue-300 text-sm">{data.primaryService}</p>
-              <p className="text-zinc-400 text-xs mb-1">Date: {formatDate(data.primaryDate)}</p>
-              <p className="text-orange-400 font-medium">
+              <p className="text-blue-500 dark:text-blue-300 text-sm">{data.primaryService}</p>
+              <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-1">Date: {formatDate(data.primaryDate)}</p>
+              <p className="text-orange-500 dark:text-orange-400 font-medium">
                 {primaryLabel}: ₦{data.primaryAmount.toLocaleString('en-NG')}
               </p>
             </div>
           )}
            {data.compareAmount !== null && compareLabel && (
             <div>
-              <p className="text-blue-300/80 text-sm">{data.compareService}</p>
-              <p className="text-zinc-400/80 text-xs mb-1">Date: {formatDate(data.compareDate)}</p>
-              <p className="text-orange-400/80 font-medium">
+              <p className="text-blue-500/80 dark:text-blue-300/80 text-sm">{data.compareService}</p>
+              <p className="text-zinc-500/80 dark:text-zinc-400/80 text-xs mb-1">Date: {formatDate(data.compareDate)}</p>
+              <p className="text-orange-500/80 dark:text-orange-400/80 font-medium">
                 {compareLabel}: ₦{data.compareAmount.toLocaleString('en-NG')}
               </p>
             </div>
@@ -128,25 +133,25 @@ export const BarChartComponent = ({ title, data, compareData, primaryLabel, comp
               <stop offset="95%" stopColor="#D97706" stopOpacity={0.3}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+          <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
           <XAxis 
             dataKey="name" 
-            stroke="rgba(255,255,255,0.7)"
+            stroke={axisColor}
             fontSize={12}
-            tick={{ fill: 'rgba(255,255,255,0.7)' }}
+            tick={{ fill: axisColor }}
             angle={-45}
             textAnchor="end"
             height={80}
             interval={0}
           />
           <YAxis 
-            stroke="rgba(255,255,255,0.7)"
+            stroke={axisColor}
             fontSize={12}
-            tick={{ fill: 'rgba(255,255,255,0.7)' }}
+            tick={{ fill: axisColor }}
             tickFormatter={(value: number) => `₦${(value / 1000).toFixed(0)}k`}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}/>
-          {isCompareMode && <Legend formatter={(value) => <span className="text-white/80">{value}</span>} verticalAlign="top" wrapperStyle={{paddingBottom: '10px'}}/>}
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(128, 128, 128, 0.1)' }}/>
+          {isCompareMode && <Legend formatter={(value) => <span className="text-zinc-800 dark:text-white/80">{value}</span>} verticalAlign="top" wrapperStyle={{paddingBottom: '10px'}}/>}
           <Bar 
             dataKey="primaryAmount" 
             name={primaryLabel || 'Amount'}
