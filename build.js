@@ -21,7 +21,7 @@ esbuild.build({
   define: {
     // Vercel provides environment variables to the build process.
     // We read it here and embed it into the bundled JS file.
-    'process.env.GEMINI_API_KEY': `"${process.env.GEMINI_API_KEY}"`,
+    'process.env.API_KEY': `"${process.env.API_KEY}"`,
   },
   // By removing the 'external' array, we tell esbuild to bundle
   // all dependencies (React, Firebase, etc.) into our output file.

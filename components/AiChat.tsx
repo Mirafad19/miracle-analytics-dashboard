@@ -48,10 +48,9 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const ai = useMemo(() => {
-    const apiKey = process.env.API_KEY;
-    if (apiKey) {
+    if (process.env.API_KEY) {
       try {
-        return new GoogleGenAI({ apiKey });
+        return new GoogleGenAI({ apiKey: process.env.API_KEY });
       } catch (error) {
         console.error("Failed to initialize GoogleGenAI:", error);
         return null;
