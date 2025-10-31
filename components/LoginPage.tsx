@@ -1,6 +1,5 @@
 // FIX: Imported 'React' to make 'React.FormEvent' type available.
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 import { Activity, AlertCircle } from './Icons';
 import { Button } from './ui/Button';
@@ -16,7 +15,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await auth.signInWithEmailAndPassword(email, password);
       // No need to redirect, the AuthProvider will handle the state change
     } catch (err: any) {
       setError('Failed to sign in. Please check your credentials.');

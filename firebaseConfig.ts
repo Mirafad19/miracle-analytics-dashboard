@@ -1,6 +1,3 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-
 // ====================================================================================
 //  CONFIGURATION COMPLETE
 //  This file now contains your personal Firebase project credentials.
@@ -10,6 +7,9 @@ import { getAuth } from 'firebase/auth';
 //  Go to the "Authentication" section in your Firebase project to add users.
 //  You will then be able to log in with the credentials you create.
 // ====================================================================================
+
+// Declare firebase to TypeScript as a global variable.
+declare var firebase: any;
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzftyoXX4l1GF-P-SIHORZE4uIp9zoOjw",
@@ -21,7 +21,9 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
 // Initialize Firebase Authentication and get a reference to the service
-export const auth = getAuth(app);
+export const auth = firebase.auth();
