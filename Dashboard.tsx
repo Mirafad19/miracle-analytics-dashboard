@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import { useState, useMemo, useRef, ChangeEvent } from 'react';
 import * as XLSX from 'xlsx';
 import { auth } from './firebaseConfig';
@@ -14,11 +9,13 @@ import { PieChartComponent } from './components/PieChart';
 import { BarChartComponent } from './components/BarChart';
 import { DashboardFilters } from './components/DashboardFilters';
 import { Sidebar } from './components/Sidebar';
-import { Activity, TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut, Upload, Sun, Moon } from './components/Icons';
+import { Activity, TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut, Upload, Sun, Moon, DollarSign } from './components/Icons';
 import { Button } from './components/ui/Button';
 import { AiChatButton, AiChatModal } from './components/AiChat';
 import { CreatorModal } from './components/CreatorModal';
 import { useTheme } from './ThemeContext';
+import { useCurrency } from './CurrencyContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/Select';
 
 interface FinancialRecord {
   'Amt. Paid': number;
@@ -76,6 +73,7 @@ export default function Dashboard() {
   const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, setTheme } = useTheme();
+  const { currency, setCurrency, formatCurrency } = useCurrency();
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
@@ -517,8 +515,6 @@ export default function Dashboard() {
   }, [accountsReceivable]);
 
   const financialSummary = useMemo(() => {
-    const formatCurrency = (val: number) => `₦${val.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    
     const generateSingleMonthSummary = (monthLabel: string, kpisData: any, incomeData: any[], expenseData: any[], arData: any[], totalAr: number) => {
         let summary = `\nHospital Financial Report Summary for ${monthLabel === 'DefaultMonth' ? 'the selected period' : monthLabel}:\n`;
         if (selectedDuty) {
@@ -579,7 +575,8 @@ export default function Dashboard() {
     }
   }, [
     kpis, incomeByPayment, expensesByCategory, accountsReceivable, totalReceivables, selectedDuty, selectedMonth,
-    selectedCompareMonth, comparisonKpis, comparisonIncomeByPayment, comparisonExpensesByCategory, comparisonAccountsReceivable
+    selectedCompareMonth, comparisonKpis, comparisonIncomeByPayment, comparisonExpensesByCategory, comparisonAccountsReceivable,
+    formatCurrency
   ]);
 
 
@@ -684,6 +681,22 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+              <div className="w-32">
+                <Select value={currency} onValueChange={(value) => setCurrency(value as any)}>
+                    <SelectTrigger className="!py-2">
+                        <div className="flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-zinc-500 dark:text-zinc-400"/>
+                            <SelectValue placeholder="Currency" />
+                        </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="NGN">NGN (₦)</SelectItem>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="GBP">GBP (£)</SelectItem>
+                        <SelectItem value="EUR">EUR (€)</SelectItem>
+                    </SelectContent>
+                </Select>
+              </div>
               <Button
                 onClick={toggleTheme}
                 className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white transition-colors p-2 h-auto"

@@ -1,5 +1,7 @@
 
+
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useCurrency } from '../CurrencyContext';
 
 interface PieChartProps {
   title: string;
@@ -10,13 +12,15 @@ interface PieChartProps {
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1'];
 
 export const PieChartComponent = ({ title, data, onSegmentClick }: PieChartProps) => {
+  const { formatCurrency } = useCurrency();
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0];
       return (
         <div className="bg-white/80 dark:bg-black/80 backdrop-blur-xl p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xl text-zinc-900 dark:text-white">
           <p className="font-medium">{data.name}</p>
-          <p className="text-blue-500 dark:text-blue-300">₦{data.value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p className="text-blue-500 dark:text-blue-300">{formatCurrency(data.value)}</p>
         </div>
       );
     }

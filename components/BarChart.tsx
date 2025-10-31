@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import * as XLSX from 'xlsx';
 import { useTheme } from '../ThemeContext';
+import { useCurrency } from '../CurrencyContext';
 
 interface BarChartData {
   name: string;
@@ -40,6 +41,7 @@ interface TooltipProps {
 
 export const BarChartComponent = ({ title, data, compareData, primaryLabel, compareLabel }: BarChartProps) => {
   const { theme } = useTheme();
+  const { formatCurrency, currencySymbol } = useCurrency();
 
   const axisColor = theme === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
   const gridColor = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
@@ -94,7 +96,7 @@ export const BarChartComponent = ({ title, data, compareData, primaryLabel, comp
               <p className="text-blue-500 dark:text-blue-300 text-sm">{data.primaryService}</p>
               <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-1">Date: {formatDate(data.primaryDate)}</p>
               <p className="text-orange-500 dark:text-orange-400 font-medium">
-                {primaryLabel}: ₦{data.primaryAmount.toLocaleString('en-NG')}
+                {primaryLabel}: {formatCurrency(data.primaryAmount)}
               </p>
             </div>
           )}
@@ -103,7 +105,7 @@ export const BarChartComponent = ({ title, data, compareData, primaryLabel, comp
               <p className="text-blue-500/80 dark:text-blue-300/80 text-sm">{data.compareService}</p>
               <p className="text-zinc-500/80 dark:text-zinc-400/80 text-xs mb-1">Date: {formatDate(data.compareDate)}</p>
               <p className="text-orange-500/80 dark:text-orange-400/80 font-medium">
-                {compareLabel}: ₦{data.compareAmount.toLocaleString('en-NG')}
+                {compareLabel}: {formatCurrency(data.compareAmount)}
               </p>
             </div>
           )}
@@ -148,7 +150,7 @@ export const BarChartComponent = ({ title, data, compareData, primaryLabel, comp
             stroke={axisColor}
             fontSize={12}
             tick={{ fill: axisColor }}
-            tickFormatter={(value: number) => `₦${(value / 1000).toFixed(0)}k`}
+            tickFormatter={(value: number) => `${currencySymbol}${(value / 1000).toFixed(0)}k`}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(128, 128, 128, 0.1)' }}/>
           {isCompareMode && <Legend formatter={(value) => <span className="text-zinc-800 dark:text-white/80">{value}</span>} verticalAlign="top" wrapperStyle={{paddingBottom: '10px'}}/>}

@@ -1,4 +1,5 @@
 import { TrendingUp, TrendingDown, DollarSign, Users, Percent } from './Icons';
+import { useCurrency } from '../CurrencyContext';
 
 interface KPICardProps {
   title: string;
@@ -10,9 +11,11 @@ interface KPICardProps {
 }
 
 export const KPICard = ({ title, value, type, count, compareValue, compareLabel }: KPICardProps) => {
+  const { formatCurrency } = useCurrency();
+
   const formatValue = (val: number) => {
     if (type === 'margin') return `${val.toFixed(1)}%`;
-    return `₦${val.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return formatCurrency(val);
   };
 
   const theme = {

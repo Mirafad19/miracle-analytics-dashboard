@@ -5,6 +5,7 @@ import LoginPage from './components/LoginPage';
 import Dashboard from './Dashboard';
 import { Activity } from './components/Icons';
 import { ThemeProvider } from './ThemeContext';
+import { CurrencyProvider } from './CurrencyContext';
 
 const AppContent = () => {
   const { currentUser, loading } = useAuth();
@@ -28,7 +29,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppContent />
+        <CurrencyProvider>
+          <AppContent />
+        </CurrencyProvider>
       </AuthProvider>
     </ThemeProvider>
   );

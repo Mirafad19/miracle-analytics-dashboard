@@ -1,5 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../ThemeContext';
+import { useCurrency } from '../CurrencyContext';
 
 export interface MergedTrendData {
   day: string;
@@ -18,6 +19,7 @@ interface TrendChartProps {
 
 export const TrendChart = ({ data, compareLabel }: TrendChartProps) => {
   const { theme } = useTheme();
+  const { formatCurrency, currencySymbol } = useCurrency();
 
   const axisColor = theme === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)';
   const gridColor = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
@@ -29,7 +31,7 @@ export const TrendChart = ({ data, compareLabel }: TrendChartProps) => {
           <p className="font-semibold mb-2">{`Day: ${label}`}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.stroke, opacity: entry.strokeDasharray ? 0.8 : 1 }} className="text-sm">
-              {`${entry.name}: ₦${(entry.value || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              {`${entry.name}: ${formatCurrency(entry.value || 0)}`}
             </p>
           ))}
         </div>
@@ -55,7 +57,7 @@ export const TrendChart = ({ data, compareLabel }: TrendChartProps) => {
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
           <XAxis dataKey="day" stroke={axisColor} fontSize={12} tick={{ fill: axisColor }} />
-          <YAxis stroke={axisColor} fontSize={12} tick={{ fill: axisColor }} tickFormatter={(value: number) => `₦${(value / 1000).toFixed(0)}k`} />
+          <YAxis stroke={axisColor} fontSize={12} tick={{ fill: axisColor }} tickFormatter={(value: number) => `${currencySymbol}${(value / 1000).toFixed(0)}k`} />
           <Tooltip content={<CustomTooltip />} />
           <Legend formatter={(value) => <span className="text-black/80 dark:text-white/80">{value}</span>} />
           <Line connectNulls type="monotone" dataKey="income" name="Income" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 8, style: { filter: 'url(#glow)', stroke: '#10B981' } }} />

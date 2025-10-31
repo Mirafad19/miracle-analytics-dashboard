@@ -5,6 +5,7 @@ import { X, Table, PieChart as PieChartIcon, BarChart3, TrendingUp, FileText } f
 import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Sector, Legend } from 'recharts';
+import { useCurrency } from '../CurrencyContext';
 
 interface FinancialRecord {
   'Amt. Paid': number;
@@ -42,6 +43,7 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'
 
 const ActiveShapeWithTooltip = (props: any) => {
     const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
+    const { formatCurrency } = useCurrency();
     const RADIAN = Math.PI / 180;
 
     const sin = Math.sin(-RADIAN * midAngle);
@@ -78,7 +80,7 @@ const ActiveShapeWithTooltip = (props: any) => {
                    className="bg-white/80 dark:bg-black/80 backdrop-blur-xl p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-xl text-zinc-900 dark:text-white"
                    style={{ textAlign: isRightSide ? 'left' : 'right' }}>
                   <p className="font-medium">{payload.name}</p>
-                  <p className="text-blue-500 dark:text-blue-300">₦{value.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  <p className="text-blue-500 dark:text-blue-300">{formatCurrency(value)}</p>
               </div>
             </foreignObject>
         </g>
@@ -158,6 +160,7 @@ export const Sidebar = ({
   compareMonthLabel, comparePaymentData, compareExpenseData,
   detailsContext
 }: SidebarProps) => {
+  const { formatCurrency } = useCurrency();
 
   const formatDate = (dateValue: unknown): string => {
     if (!dateValue) return 'N/A';
@@ -250,7 +253,7 @@ export const Sidebar = ({
                             {selectedSegment} Transactions for {detailsContext === 'primary' ? primaryMonthLabel : compareMonthLabel} ({selectedSegmentData.length})
                         </CardTitle>
                         <div className={`text-xl font-bold ${activeSection === 'payment' ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                            Total: ₦{totalSelectedAmount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            Total: {formatCurrency(totalSelectedAmount)}
                         </div>
                     </div>
                 </CardHeader>
@@ -260,12 +263,12 @@ export const Sidebar = ({
                             {activeSection === 'payment' ? (
                                 <>
                                     <thead><tr className="sticky top-0 bg-gray-100 dark:bg-zinc-950 backdrop-blur-sm"><th className="p-3 text-left text-zinc-600 dark:text-zinc-300">Date</th><th className="p-3 text-left text-zinc-600 dark:text-zinc-300">Patient Name</th><th className="p-3 text-left text-zinc-600 dark:text-zinc-300">Purpose</th><th className="p-3 text-right text-zinc-600 dark:text-zinc-300">Amount</th></tr></thead>
-                                    <tbody>{selectedSegmentData.map((record, index) => isFinancialRecord(record) && (<tr key={index} className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 even:bg-gray-50/40 dark:even:bg-black/40"><td className="p-3 text-blue-600 dark:text-blue-300">{formatDate(record.Date)}</td><td className="p-3 text-black dark:text-white">{record.Name || 'N/A'}</td><td className="p-3 text-zinc-700 dark:text-zinc-300">{record.Purpose || 'N/A'}</td><td className="p-3 text-right text-green-600 dark:text-green-400 font-medium">₦{record['Amt. Paid'].toLocaleString('en-NG')}</td></tr>))}</tbody>
+                                    <tbody>{selectedSegmentData.map((record, index) => isFinancialRecord(record) && (<tr key={index} className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 even:bg-gray-50/40 dark:even:bg-black/40"><td className="p-3 text-blue-600 dark:text-blue-300">{formatDate(record.Date)}</td><td className="p-3 text-black dark:text-white">{record.Name || 'N/A'}</td><td className="p-3 text-zinc-700 dark:text-zinc-300">{record.Purpose || 'N/A'}</td><td className="p-3 text-right text-green-600 dark:text-green-400 font-medium">{formatCurrency(record['Amt. Paid'])}</td></tr>))}</tbody>
                                 </>
                             ) : (
                                 <>
                                     <thead><tr className="sticky top-0 bg-gray-100 dark:bg-zinc-950 backdrop-blur-sm"><th className="p-3 text-left text-zinc-600 dark:text-zinc-300">Date</th><th className="p-3 text-left text-zinc-600 dark:text-zinc-300">Duty</th><th className="p-3 text-left text-zinc-600 dark:text-zinc-300">Purpose</th><th className="p-3 text-right text-zinc-600 dark:text-zinc-300">Amount</th></tr></thead>
-                                    <tbody>{selectedSegmentData.map((record, index) => isExpenseRecord(record) && (<tr key={index} className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 even:bg-gray-50/40 dark:even:bg-black/40"><td className="p-3 text-blue-600 dark:text-blue-300">{formatDate(record.Date)}</td><td className="p-3 text-black dark:text-white">{record.Duty || 'N/A'}</td><td className="p-3 text-zinc-700 dark:text-zinc-300">{record.Purpose || 'N/A'}</td><td className="p-3 text-right text-red-500 dark:text-red-400 font-medium">₦{record.ExpenseAmount.toLocaleString('en-NG')}</td></tr>))}</tbody>
+                                    <tbody>{selectedSegmentData.map((record, index) => isExpenseRecord(record) && (<tr key={index} className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 even:bg-gray-50/40 dark:even:bg-black/40"><td className="p-3 text-blue-600 dark:text-blue-300">{formatDate(record.Date)}</td><td className="p-3 text-black dark:text-white">{record.Duty || 'N/A'}</td><td className="p-3 text-zinc-700 dark:text-zinc-300">{record.Purpose || 'N/A'}</td><td className="p-3 text-right text-red-500 dark:text-red-400 font-medium">{formatCurrency(record.ExpenseAmount)}</td></tr>))}</tbody>
                                 </>
                             )}
                         </table>
@@ -282,16 +285,16 @@ export const Sidebar = ({
                     <div className={isCompareMode ? "text-center border-r border-zinc-200 dark:border-zinc-700 pr-4" : "text-center"}>
                         {isCompareMode && <h4 className="text-lg font-semibold text-black dark:text-white mb-2">{primaryMonthLabel}</h4>}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="text-center"><div className="text-2xl font-bold text-green-500 dark:text-green-400">₦{totalPrimaryRevenue.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div><div className="text-sm text-zinc-600 dark:text-zinc-400">Total Revenue</div></div>
-                          <div className="text-center"><div className="text-2xl font-bold text-red-500 dark:text-red-400">₦{totalPrimaryExpenses.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div><div className="text-sm text-zinc-600 dark:text-zinc-400">Total Expenses</div></div>
+                          <div className="text-center"><div className="text-2xl font-bold text-green-500 dark:text-green-400">{formatCurrency(totalPrimaryRevenue)}</div><div className="text-sm text-zinc-600 dark:text-zinc-400">Total Revenue</div></div>
+                          <div className="text-center"><div className="text-2xl font-bold text-red-500 dark:text-red-400">{formatCurrency(totalPrimaryExpenses)}</div><div className="text-sm text-zinc-600 dark:text-zinc-400">Total Expenses</div></div>
                         </div>
                     </div>
                     {isCompareMode && (
                         <div className="text-center">
                             <h4 className="text-lg font-semibold text-black dark:text-white mb-2">{compareMonthLabel}</h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div className="text-center"><div className="text-2xl font-bold text-green-500 dark:text-green-400">₦{totalCompareRevenue.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div><div className="text-sm text-zinc-600 dark:text-zinc-400">Total Revenue</div></div>
-                              <div className="text-center"><div className="text-2xl font-bold text-red-500 dark:text-red-400">₦{totalCompareExpenses.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div><div className="text-sm text-zinc-600 dark:text-zinc-400">Total Expenses</div></div>
+                              <div className="text-center"><div className="text-2xl font-bold text-green-500 dark:text-green-400">{formatCurrency(totalCompareRevenue)}</div><div className="text-sm text-zinc-600 dark:text-zinc-400">Total Revenue</div></div>
+                              <div className="text-center"><div className="text-2xl font-bold text-red-500 dark:text-red-400">{formatCurrency(totalCompareExpenses)}</div><div className="text-sm text-zinc-600 dark:text-zinc-400">Total Expenses</div></div>
                             </div>
                         </div>
                     )}
