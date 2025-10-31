@@ -634,6 +634,7 @@ export default function Dashboard() {
   
   const handleSignOut = async () => {
     try {
+      // FIX: Updated sign out logic to use Firebase v8 syntax, resolving a module export error.
       await auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);

@@ -1,20 +1,21 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { auth } from './firebaseConfig';
-import { User } from 'firebase/auth';
+// FIX: Switched to Firebase v8 compatible types and methods to resolve module export errors.
+import firebase from 'firebase/app';
 
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: firebase.User | null;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children?: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user: User | null) => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
       setLoading(false);
     });

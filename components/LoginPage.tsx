@@ -15,6 +15,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
     try {
+      // FIX: Updated sign-in logic to use Firebase v8 syntax, resolving a module export error.
       await auth.signInWithEmailAndPassword(email, password);
       // No need to redirect, the AuthProvider will handle the state change
     } catch (err: any) {
