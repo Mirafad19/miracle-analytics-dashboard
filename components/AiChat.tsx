@@ -17,7 +17,7 @@ export const AiChatButton = ({ onClick }: AiChatButtonProps) => {
       aria-label="Open AI Chat"
     >
       <div className="absolute inset-0 bg-black/20 rounded-full"></div>
-      <Sparkles className="h-8 w-8 relative" />
+      <Bot className="h-8 w-8 relative" />
       <div className="absolute top-0 right-0 h-4 w-4 bg-green-400 rounded-full border-2 border-indigo-600 animate-pulse"></div>
     </button>
   );
@@ -48,7 +48,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const ai = useMemo(() => {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.API_KEY;
     if (apiKey) {
       try {
         return new GoogleGenAI({ apiKey });
@@ -57,7 +57,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
         return null;
       }
     }
-    console.warn("GEMINI_API_KEY environment variable not found.");
+    console.warn("API_KEY environment variable not found.");
     return null;
   }, []);
 
@@ -148,32 +148,32 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center p-4 animate-fade-in" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl h-[80vh] bg-black/70 backdrop-blur-2xl border border-zinc-800 rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
-        <header className="flex items-center justify-between p-4 border-b border-zinc-700 flex-shrink-0">
+      <div className="relative w-full max-w-2xl h-[80vh] bg-white/70 dark:bg-black/70 backdrop-blur-2xl border border-zinc-200 dark:border-zinc-800 rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+        <header className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-700 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-zinc-950 rounded-lg border border-zinc-800"><Bot className="h-6 w-6 text-purple-400" /></div>
-            <h2 className="text-xl font-bold text-white">AI Financial Analyst</h2>
+            <div className="p-2 bg-zinc-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><Bot className="h-6 w-6 text-purple-500 dark:text-purple-400" /></div>
+            <h2 className="text-xl font-bold text-black dark:text-white">AI Financial Analyst</h2>
           </div>
-          <Button onClick={onClose} className="text-white hover:bg-white/10 rounded-full p-2 h-auto"><X className="h-5 w-5" /></Button>
+          <Button onClick={onClose} className="text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-full p-2 h-auto"><X className="h-5 w-5" /></Button>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 space-y-6 bg-zinc-950/50">
+        <main className="flex-1 overflow-y-auto p-6 space-y-6 bg-zinc-100/50 dark:bg-zinc-950/50">
           {messages.map((msg, index) => (
             <div key={index} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {msg.role === 'model' && <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0"><Bot className="h-5 w-5 text-purple-300" /></div>}
-              <div className={`max-w-xl p-4 rounded-2xl ${msg.role === 'user' ? 'bg-blue-500/20 rounded-br-none text-white' : 'bg-transparent rounded-bl-none text-zinc-200'}`}>
-                <div className="prose prose-invert prose-p:my-2 prose-strong:text-white prose-ul:my-2" dangerouslySetInnerHTML={{ __html: msg.content }} />
+              {msg.role === 'model' && <div className="w-8 h-8 rounded-full bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center flex-shrink-0"><Bot className="h-5 w-5 text-purple-500 dark:text-purple-300" /></div>}
+              <div className={`max-w-xl p-4 rounded-2xl ${msg.role === 'user' ? 'bg-blue-500/10 dark:bg-blue-500/20 rounded-br-none text-black dark:text-white' : 'bg-transparent rounded-bl-none text-zinc-800 dark:text-zinc-200'}`}>
+                <div className="prose prose-p:my-2 prose-strong:text-black dark:prose-strong:text-white prose-ul:my-2" dangerouslySetInnerHTML={{ __html: msg.content }} />
               </div>
             </div>
           ))}
           {isLoading && (
             <div className="flex gap-3 justify-start">
-               <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0"><Bot className="h-5 w-5 text-purple-300" /></div>
+               <div className="w-8 h-8 rounded-full bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center flex-shrink-0"><Bot className="h-5 w-5 text-purple-500 dark:text-purple-300" /></div>
               <div className="max-w-xl p-4 rounded-2xl bg-transparent rounded-bl-none">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 bg-purple-400 rounded-full animate-pulse [animation-delay:-0.3s]"></span>
-                  <span className="h-2 w-2 bg-purple-400 rounded-full animate-pulse [animation-delay:-0.15s]"></span>
-                  <span className="h-2 w-2 bg-purple-400 rounded-full animate-pulse"></span>
+                  <span className="h-2 w-2 bg-purple-500 dark:bg-purple-400 rounded-full animate-pulse [animation-delay:-0.3s]"></span>
+                  <span className="h-2 w-2 bg-purple-500 dark:bg-purple-400 rounded-full animate-pulse [animation-delay:-0.15s]"></span>
+                  <span className="h-2 w-2 bg-purple-500 dark:bg-purple-400 rounded-full animate-pulse"></span>
                 </div>
               </div>
             </div>
@@ -181,10 +181,10 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
           <div ref={messagesEndRef} />
         </main>
 
-        <footer className="p-4 border-t border-zinc-700 space-y-3">
+        <footer className="p-4 border-t border-zinc-200 dark:border-zinc-700 space-y-3">
             <div className="flex gap-2">
                 {PROMPT_SUGGESTIONS.map(prompt => (
-                    <button key={prompt} onClick={(e) => handleSubmit(e, prompt)} disabled={isLoading} className="px-3 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs rounded-full transition-colors disabled:opacity-50">
+                    <button key={prompt} onClick={(e) => handleSubmit(e, prompt)} disabled={isLoading} className="px-3 py-1 bg-zinc-200 dark:bg-zinc-900 hover:bg-zinc-300 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs rounded-full transition-colors disabled:opacity-50">
                         {prompt}
                     </button>
                 ))}
@@ -196,7 +196,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask about your financial data..."
                     disabled={isLoading}
-                    className="flex-1 bg-zinc-950 px-4 py-3 text-white border border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
+                    className="flex-1 bg-gray-100 dark:bg-zinc-950 px-4 py-3 text-black dark:text-white border border-zinc-300 dark:border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
                 />
                 <Button type="submit" disabled={isLoading || !input.trim()} className="p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:bg-purple-600/50">
                     <Send className="h-5 w-5" />
