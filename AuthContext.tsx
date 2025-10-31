@@ -1,20 +1,25 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { auth } from './firebaseConfig';
-import { User } from 'firebase/auth';
+// FIX: Using Firebase v8 compatible User type.
+import firebase from 'firebase/app';
+import 'firebase/auth';
 
 interface AuthContextType {
-  currentUser: User | null;
+  // FIX: Using firebase.User type from v8 API.
+  currentUser: firebase.User | null;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children?: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // FIX: Using firebase.User type from v8 API.
+  const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user: User | null) => {
+    // FIX: Using firebase.User type from v8 API.
+    const unsubscribe = auth.onAuthStateChanged((user: firebase.User | null) => {
       setCurrentUser(user);
       setLoading(false);
     });

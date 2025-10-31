@@ -83,9 +83,10 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
 
       const sendInitialMessage = async () => {
         try {
+          const initialPrompt = `The user has opened the chat. Please greet them and offer to analyze their financial data. Here is the data for context, but do not show it to the user unless they ask for specific figures: \n\n${financialData}`;
           const response = await ai.models.generateContentStream({
             model: "gemini-2.5-flash",
-            contents: [{ parts: [{ text: `The user has opened the chat. Please greet them and offer to analyze their financial data. Here is the data for context, but do not show it to the user unless they ask for specific figures: \n\n${financialData}` }] }],
+            contents: initialPrompt,
             config: { systemInstruction },
           });
           
@@ -121,17 +122,16 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
     setIsLoading(true);
 
     try {
+        const fullPrompt = `CONTEXT:\n${financialData}\n\nUSER QUESTION: ${userMessage}`;
         const response = await ai.models.generateContentStream({
             model: "gemini-2.5-flash",
-            contents: [{ parts: [{ text: `CONTEXT:\n${financialData}\n\nUSER QUESTION: ${userMessage}` }] }],
+            contents: fullPrompt,
             config: { systemInstruction }
         });
 
         let newContent = '';
         for await (const chunk of response) {
             newContent += chunk.text;
-            // To stream word by word, you might need more complex state management.
-            // For simplicity, we'll just update at the end of the stream here.
         }
         setMessages(prev => [...prev, { role: 'model', content: newContent }]);
     } catch (error) {
