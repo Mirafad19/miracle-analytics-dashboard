@@ -1,28 +1,44 @@
-// FIX: Added 'React' import to fix JSX parsing issue.
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import LoginPage from './components/LoginPage';
 import Dashboard from './Dashboard';
-import { Activity } from './components/Icons';
+import { Spinner } from './components/Icons';
 import { ThemeProvider } from './ThemeContext';
 import { CurrencyProvider } from './CurrencyContext';
+import LandingPage from './components/LandingPage';
 
 const AppContent = () => {
   const { currentUser, loading } = useAuth();
+  // Initialize based on whether a user is already logged in.
+  // If no user, default to showing the landing page.
+  const [showLanding, setShowLanding] = useState(!currentUser);
+
+  useEffect(() => {
+    // This effect runs when the authentication state changes.
+    // If the user logs out (currentUser becomes null), we ensure
+    // the landing page is shown next.
+    if (!currentUser) {
+      setShowLanding(true);
+    }
+  }, [currentUser]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
-        <div className="relative">
-          <div className="absolute inset-0 bg-blue-400 rounded-full blur-lg opacity-75 animate-pulse"></div>
-          <Activity className="relative h-16 w-16 text-blue-300 animate-pulse" />
-        </div>
-        <p className="text-lg text-zinc-100">Authenticating...</p>
+        <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
+        <p className="text-lg text-zinc-300">Loading Dashboard...</p>
       </div>
     );
   }
 
-  return currentUser ? <Dashboard /> : <LoginPage />;
+  if (currentUser) {
+    return <Dashboard />;
+  }
+
+  return showLanding 
+    ? <LandingPage onLoginClick={() => setShowLanding(false)} /> 
+    : <LoginPage />;
 };
 
 export default function App() {
