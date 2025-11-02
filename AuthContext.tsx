@@ -10,7 +10,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children?: ReactNode }) => {
+// FIX: Refactored props to a named interface to improve type checking reliability.
+interface AuthProviderProps {
+  children?: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
   const [loading, setLoading] = useState(true);
 

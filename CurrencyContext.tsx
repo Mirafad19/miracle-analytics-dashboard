@@ -25,7 +25,12 @@ const currencyLocales: Record<Currency, string> = {
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
-export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
+// FIX: Made 'children' optional and used a named interface to resolve an incorrect 'missing property' error.
+interface CurrencyProviderProps {
+  children?: ReactNode;
+}
+
+export const CurrencyProvider = ({ children }: CurrencyProviderProps) => {
   const [currency, setCurrency] = useState<Currency>('NGN');
   
   const currencySymbol = useMemo(() => currencySymbols[currency], [currency]);

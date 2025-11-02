@@ -646,7 +646,16 @@ export default function Dashboard() {
 
   if (!monthlyData) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative">
+        <div className="absolute top-6 right-6">
+          <Button 
+            onClick={handleSignOut} 
+            className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-colors flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
         <div className="text-center mb-8">
             <div className="inline-block bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 p-3 rounded-2xl mb-4">
               <Activity className="h-10 w-10 text-white" />
@@ -654,7 +663,7 @@ export default function Dashboard() {
             <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
                 Miracle Analytics
             </h1>
-            <p className="text-lg text-blue-200">Financial Intelligence Dashboard for Healthcare</p>
+            <p className="text-lg text-blue-200">Financial Intelligence Dashboard</p>
         </div>
         <FileUpload onDataUploaded={handleDataUpload} />
       </div>

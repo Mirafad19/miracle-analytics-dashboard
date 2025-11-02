@@ -6,7 +6,11 @@ import { auth } from '../firebaseConfig';
 import { Activity, AlertCircle } from './Icons';
 import { Button } from './ui/Button';
 
-export default function LoginPage() {
+interface LoginPageProps {
+  onBackToHome: () => void;
+}
+
+export default function LoginPage({ onBackToHome }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -93,6 +97,15 @@ export default function LoginPage() {
               </Button>
             </div>
           </form>
+          <div className="text-center mt-6">
+            <button
+              type="button"
+              onClick={onBackToHome}
+              className="text-sm text-zinc-400 hover:text-white hover:underline transition-colors"
+            >
+              ← Back to Home
+            </button>
+          </div>
         </div>
         <footer className="text-center py-8 text-sm text-zinc-500">
             © 2025 Miracle Analytics. All Rights Reserved.

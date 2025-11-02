@@ -1,7 +1,7 @@
 
 import React from 'react';
 import VideoPlayer from './VideoPlayer';
-import { Activity, BarChart3, TrendingUp, Sparkles } from './Icons';
+import { Activity, BarChart3, TrendingUp, Bot } from './Icons';
 import { Button } from './ui/Button';
 
 interface LandingPageProps {
@@ -34,12 +34,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-700 to-black opacity-90 z-0"></div>
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
           <div className="relative z-10 animate-fade-in space-y-6">
-            <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tighter shadow-xl">
+            <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tighter">
               From Raw Data to Actionable Insights.
               <span className="block text-purple-300 mt-2">Instantly.</span>
             </h2>
             <p className="max-w-3xl mx-auto text-lg md:text-xl text-indigo-100">
-              This powerful 90-second demo reveals how our AI-driven dashboard transforms complex financial spreadsheets into clear, strategic intelligence for healthcare providers.
+              This powerful 90-second demo reveals how our AI-driven dashboard transforms complex financial spreadsheets into clear, strategic intelligence for businesses and organizations.
             </p>
           </div>
         </section>
@@ -65,7 +65,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
               <p className="text-zinc-600 dark:text-zinc-400">Interactive charts and graphs make complex data easy to understand and act upon.</p>
             </div>
             <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl">
-              <div className="p-3 inline-block bg-purple-500/10 rounded-lg mb-4"><Sparkles className="h-8 w-8 text-purple-500" /></div>
+              <div className="p-3 inline-block bg-purple-500/10 rounded-lg mb-4"><Bot className="h-8 w-8 text-purple-500" /></div>
               <h4 className="text-xl font-semibold mb-2 text-black dark:text-white">AI-Powered Analysis</h4>
               <p className="text-zinc-600 dark:text-zinc-400">Leverage our AI Analyst to get instant summaries, identify risks, and uncover opportunities.</p>
             </div>
@@ -85,7 +85,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       </main>
 
       <footer className="text-center p-8 text-sm text-zinc-500 dark:text-zinc-600">
-        <p>© 2025 Miracle Analytics. The future of healthcare financial intelligence.</p>
+        <p>© 2025 Miracle Analytics. The future of financial intelligence.</p>
       </footer>
     </div>
   );

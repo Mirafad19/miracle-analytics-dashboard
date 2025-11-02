@@ -38,7 +38,7 @@ const AppContent = () => {
 
   return showLanding 
     ? <LandingPage onLoginClick={() => setShowLanding(false)} /> 
-    : <LoginPage />;
+    : <LoginPage onBackToHome={() => setShowLanding(true)} />;
 };
 
 export default function App() {
