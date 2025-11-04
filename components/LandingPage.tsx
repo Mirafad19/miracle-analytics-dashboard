@@ -9,8 +9,8 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
-  // IMPORTANT: Replace this placeholder with the direct URL to your video file.
-  const videoUrl = "https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4";
+  // Switched to a direct video link. Google Drive links are not suitable for direct embedding.
+  const videoUrl = "https://res.cloudinary.com/dikjg06mc/video/upload/v1762215214/Gee_s_Video_-_Nov_4_2025-VEED_ahvyxt.mp4";
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#101010] text-black dark:text-white font-sans">
