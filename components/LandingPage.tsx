@@ -1,17 +1,14 @@
 
 import React from 'react';
-import VideoPlayer from './VideoPlayer';
-import { Activity, BarChart3, TrendingUp, Bot } from './Icons';
-import { Button } from './ui/Button';
+import VideoPlayer from './VideoPlayer.tsx';
+import { Activity, BarChart3, TrendingUp, Bot, Upload, Mail } from './Icons.tsx';
+import { Button } from './ui/Button.tsx';
 
 interface LandingPageProps {
   onLoginClick: () => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
-  // Switched to a direct video link. Google Drive links are not suitable for direct embedding.
-  const videoUrl = "https://res.cloudinary.com/dikjg06mc/video/upload/v1762215214/Gee_s_Video_-_Nov_4_2025-VEED_ahvyxt.mp4";
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#101010] text-black dark:text-white font-sans">
       <header className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-10">
@@ -25,7 +22,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           onClick={onLoginClick}
           className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-colors"
         >
-          Secure Login
+          Sign In
         </Button>
       </header>
 
@@ -36,16 +33,46 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           <div className="relative z-10 animate-fade-in space-y-6">
             <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tighter">
               From Raw Data to Actionable Insights.
-              <span className="block text-purple-300 mt-2">Instantly.</span>
+              <span className="block text-yellow-300 [text-shadow:0_0_15px_rgba(234,179,8,0.7)] mt-2">Instantly.</span>
             </h2>
             <p className="max-w-3xl mx-auto text-lg md:text-xl text-indigo-100">
-              This powerful 90-second demo reveals how our AI-driven dashboard transforms complex financial spreadsheets into clear, strategic intelligence for businesses and organizations.
+              Watch how our AI-driven dashboard instantly transforms complex financial spreadsheets into clear, strategic intelligence for your organization.
             </p>
           </div>
         </section>
 
         <section className="relative -mt-32 z-20 p-6">
-          <VideoPlayer videoSrc={videoUrl} />
+          <VideoPlayer />
+        </section>
+        
+        <section className="py-20 px-6 text-center">
+            <h3 className="text-3xl font-bold mb-4 text-black dark:text-white">A Smarter Workflow in 3 Simple Steps</h3>
+            <p className="max-w-2xl mx-auto text-zinc-600 dark:text-zinc-400 mb-12">
+                Go from complex spreadsheets to actionable insights faster than ever before.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div className="text-center">
+                    <div className="p-4 inline-block bg-blue-500/10 rounded-full mb-4 ring-8 ring-blue-500/5">
+                        <Upload className="h-10 w-10 text-blue-500" />
+                    </div>
+                    <h4 className="text-xl font-semibold mb-2 text-black dark:text-white">1. Upload Your Data</h4>
+                    <p className="text-zinc-600 dark:text-zinc-400">Securely upload your Excel file. Our platform intelligently parses your financial records, handling multiple months and formats with ease.</p>
+                </div>
+                <div className="text-center">
+                    <div className="p-4 inline-block bg-purple-500/10 rounded-full mb-4 ring-8 ring-purple-500/5">
+                        <BarChart3 className="h-10 w-10 text-purple-500" />
+                    </div>
+                    <h4 className="text-xl font-semibold mb-2 text-black dark:text-white">2. Visualize & Analyze</h4>
+                    <p className="text-zinc-600 dark:text-zinc-400">Instantly see your data come to life. Interact with dynamic charts and graphs that reveal trends, KPIs, and key financial metrics at a glance.</p>
+                </div>
+                <div className="text-center">
+                    <div className="p-4 inline-block bg-emerald-500/10 rounded-full mb-4 ring-8 ring-emerald-500/5">
+                        <Bot className="h-10 w-10 text-emerald-500" />
+                    </div>
+                    <h4 className="text-xl font-semibold mb-2 text-black dark:text-white">3. Gain AI Insights</h4>
+                    <p className="text-zinc-600 dark:text-zinc-400">Chat with our AI Financial Analyst. Ask complex questions in plain language and get summaries, risk assessments, and strategic advice.</p>
+                </div>
+            </div>
         </section>
 
         <section className="py-20 px-6 text-center">
@@ -82,6 +109,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             Access the Live Dashboard
           </Button>
         </section>
+
+        <section className="py-20 px-6">
+            <div className="max-w-4xl mx-auto text-center bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-12 rounded-2xl shadow-2xl">
+                <h3 className="text-3xl font-bold mb-4">Get Started with Miracle Analytics</h3>
+                <p className="text-indigo-200 mb-8 max-w-2xl mx-auto">
+                    Ready to transform your financial reporting? Contact our team today to set up your account and receive your login credentials. We'll get you started on the path to data-driven success.
+                </p>
+                <a href="mailto:fadahunsi.miracle@gmail.com"
+                   className="inline-flex items-center justify-center gap-2 text-lg font-semibold bg-white text-indigo-600 py-3 px-8 rounded-lg transition-all duration-300 hover:bg-indigo-100 hover:scale-105 shadow-lg">
+                    <Mail className="h-5 w-5" />
+                    Contact for Access
+                </a>
+            </div>
+        </section>
+
       </main>
 
       <footer className="text-center p-8 text-sm text-zinc-500 dark:text-zinc-600">
