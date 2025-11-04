@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import VideoPlayer from './VideoPlayer.tsx';
-import { Activity, BarChart3, TrendingUp, Bot, Upload, Mail } from './Icons.tsx';
+import { Activity, BarChart3, Bot, Upload, Mail, ChevronDown, Linkedin, Facebook, TwitterX, Instagram } from './Icons.tsx';
 import { Button } from './ui/Button.tsx';
 import { CreatorModal } from './CreatorModal.tsx';
 
@@ -9,8 +9,51 @@ interface LandingPageProps {
   onLoginClick: () => void;
 }
 
+const faqData = [
+  {
+    question: "What is Miracle Analytics?",
+    answer: "Miracle Analytics is an AI-powered financial intelligence dashboard designed to transform complex spreadsheets into clear, interactive, and actionable insights. It helps businesses understand their financial health, track KPIs in real-time, and make data-driven decisions with confidence."
+  },
+  {
+    question: "What kind of data can I upload?",
+    answer: "Our platform is designed to be flexible. It's optimized for financial spreadsheets (like Excel .xlsx or .xls files) containing transactional data such as income, expenses, payment methods, and dates. We provide a concierge onboarding service to ensure your specific data format is perfectly integrated."
+  },
+  {
+    question: "Is my financial data secure?",
+    answer: "Absolutely. Security is our top priority. Each client operates in a completely separate and secure workspace. Your data is isolated and protected using industry-standard security measures, ensuring that only your authorized users can access it."
+  },
+  {
+    question: "How do I get started?",
+    answer: "Getting started is easy! Simply fill out our contact form below or send us an email. Our team will reach out to you personally to understand your needs, set up your dedicated workspace, and provide you with your login credentials for a seamless onboarding experience."
+  }
+];
+
+const FaqItem: React.FC<{ question: string; answer: string; isOpen: boolean; onClick: () => void; }> = ({ question, answer, isOpen, onClick }) => {
+  return (
+    <div className="border-b border-zinc-200 dark:border-zinc-800">
+      <button onClick={onClick} className="flex justify-between items-center w-full py-5 text-left">
+        <span className="text-lg font-medium text-black dark:text-white">{question}</span>
+        <ChevronDown className={`h-6 w-6 text-purple-500 dark:text-purple-400 transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-96' : 'max-h-0'}`}>
+        <p className="pt-2 pb-5 text-zinc-600 dark:text-zinc-400">{answer}</p>
+      </div>
+    </div>
+  );
+};
+
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real application, you would handle form submission here (e.g., send data to an API).
+    // For now, we'll just log it. A mailto link is provided as a fallback.
+    alert("Thank you for your message! For this demo, please use the direct email link. Your form data has been logged to the console.");
+    const formData = new FormData(e.target as HTMLFormElement);
+    console.log(Object.fromEntries(formData.entries()));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#101010] text-black dark:text-white font-sans">
@@ -78,58 +121,77 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </div>
         </section>
 
-        <section className="py-20 px-6 text-center">
-          <h3 className="text-3xl font-bold mb-4 text-black dark:text-white">The Cure for Manual Reporting</h3>
-          <p className="max-w-2xl mx-auto text-zinc-600 dark:text-zinc-400 mb-12">
-            Stop wasting hours on spreadsheets. Our dashboard provides the immediate clarity you need to optimize performance.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl">
-              <div className="p-3 inline-block bg-emerald-500/10 rounded-lg mb-4"><TrendingUp className="h-8 w-8 text-emerald-500" /></div>
-              <h4 className="text-xl font-semibold mb-2 text-black dark:text-white">Track KPIs in Real-Time</h4>
-              <p className="text-zinc-600 dark:text-zinc-400">Monitor income, expenses, and profit margins as they happen, not weeks later.</p>
-            </div>
-            <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl">
-              <div className="p-3 inline-block bg-blue-500/10 rounded-lg mb-4"><BarChart3 className="h-8 w-8 text-blue-500" /></div>
-              <h4 className="text-xl font-semibold mb-2 text-black dark:text-white">Visualize Financial Health</h4>
-              <p className="text-zinc-600 dark:text-zinc-400">Interactive charts and graphs make complex data easy to understand and act upon.</p>
-            </div>
-            <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl">
-              <div className="p-3 inline-block bg-purple-500/10 rounded-lg mb-4"><Bot className="h-8 w-8 text-purple-500" /></div>
-              <h4 className="text-xl font-semibold mb-2 text-black dark:text-white">AI-Powered Analysis</h4>
-              <p className="text-zinc-600 dark:text-zinc-400">Leverage our AI Analyst to get instant summaries, identify risks, and uncover opportunities.</p>
+        <section className="py-20 px-6 bg-zinc-100 dark:bg-black">
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-3xl font-bold text-center mb-12 text-black dark:text-white">Frequently Asked Questions</h3>
+            <div className="space-y-4">
+              {faqData.map((faq, index) => (
+                <FaqItem
+                  key={index}
+                  question={faq.question}
+                  answer={faq.answer}
+                  isOpen={openFaq === index}
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                />
+              ))}
             </div>
           </div>
         </section>
 
-        <section className="py-16 text-center bg-zinc-100 dark:bg-black">
-          <h3 className="text-3xl font-bold text-black dark:text-white mb-4">Ready to See It in Action?</h3>
-          <p className="text-zinc-600 dark:text-zinc-400 mb-8">Access the full, interactive dashboard.</p>
-          <Button
-            onClick={onLoginClick}
-            className="text-lg font-semibold bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white py-4 px-8 transition-all duration-300 hover:scale-105 shadow-lg"
-          >
-            Access the Live Dashboard
-          </Button>
-        </section>
-
         <section className="py-20 px-6">
-            <div className="max-w-4xl mx-auto text-center bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-12 rounded-2xl shadow-2xl">
-                <h3 className="text-3xl font-bold mb-4">Get Started with Miracle Analytics</h3>
-                <p className="text-indigo-200 mb-8 max-w-2xl mx-auto">
-                    Ready to transform your financial reporting? Contact our team today to set up your account and receive your login credentials. We'll get you started on the path to data-driven success.
+          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+            <div className="space-y-6 text-zinc-700 dark:text-zinc-300">
+                <h3 className="text-3xl font-bold text-black dark:text-white">Get in Touch</h3>
+                <p>
+                    Ready to transform your financial reporting? Fill out the form or send us a direct email to start the conversation. Our team of experts is ready to provide a personalized onboarding experience and set you up with your dedicated analytics workspace.
                 </p>
-                <a href="mailto:fadahunsi.miracle@gmail.com"
-                   className="inline-flex items-center justify-center gap-2 text-lg font-semibold bg-white text-indigo-600 py-3 px-8 rounded-lg transition-all duration-300 hover:bg-indigo-100 hover:scale-105 shadow-lg">
-                    <Mail className="h-5 w-5" />
-                    Contact for Access
+                <a href="mailto:fadahunsi.miracle@gmail.com" className="inline-flex items-center gap-3 text-lg font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors">
+                    <Mail className="h-6 w-6" />
+                    fadahunsi.miracle@gmail.com
                 </a>
+                <div className="flex items-center gap-4 pt-4">
+                    <a href="#" className="text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"><TwitterX className="h-6 w-6"/></a>
+                    <a href="#" className="text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"><Facebook className="h-6 w-6"/></a>
+                    <a href="#" className="text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"><Instagram className="h-6 w-6"/></a>
+                    <a href="https://www.linkedin.com/in/miracle-fadahunsi-897149295/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"><Linkedin className="h-6 w-6"/></a>
+                </div>
             </div>
+            <div className="bg-white dark:bg-black p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl">
+                <form className="space-y-6" onSubmit={handleFormSubmit}>
+                    <div className="grid sm:grid-cols-2 gap-6">
+                        <div>
+                            <label htmlFor="full-name" className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-2">Full Name</label>
+                            <input type="text" name="full-name" id="full-name" placeholder="ex. John Carter" required className="w-full px-4 py-3 bg-gray-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        </div>
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-2">Email Address</label>
+                            <input type="email" name="email" id="email" placeholder="example@email.com" required className="w-full px-4 py-3 bg-gray-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                        </div>
+                    </div>
+                     <div>
+                        <label htmlFor="subject" className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-2">Subject</label>
+                        <input type="text" name="subject" id="subject" placeholder="ex. Onboarding Request" required className="w-full px-4 py-3 bg-gray-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                        <label htmlFor="message" className="block text-sm font-medium text-zinc-600 dark:text-zinc-300 mb-2">Leave us a message</label>
+                        <textarea name="message" id="message" rows={5} placeholder="Please type your message here..." required className="w-full px-4 py-3 bg-gray-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                    </div>
+                    <div>
+                        <Button
+                            type="submit"
+                            className="w-full text-lg font-semibold bg-zinc-800 hover:bg-black dark:bg-zinc-200 dark:hover:bg-white text-white dark:text-black py-3 transition-all duration-300"
+                        >
+                            Send Message
+                        </Button>
+                    </div>
+                </form>
+            </div>
+          </div>
         </section>
 
       </main>
 
-      <footer className="text-center p-8 text-sm text-zinc-500 dark:text-zinc-600">
+      <footer className="text-center p-8 text-sm text-zinc-500 dark:text-zinc-600 bg-zinc-100 dark:bg-black">
         <p>
           © 2025 Miracle Analytics. The future of financial intelligence. A project by{' '}
           <button 
