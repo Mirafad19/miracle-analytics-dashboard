@@ -1,14 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import VideoPlayer from './VideoPlayer.tsx';
 import { Activity, BarChart3, TrendingUp, Bot, Upload, Mail } from './Icons.tsx';
 import { Button } from './ui/Button.tsx';
+import { CreatorModal } from './CreatorModal.tsx';
 
 interface LandingPageProps {
   onLoginClick: () => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
+  const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#101010] text-black dark:text-white font-sans">
       <header className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-10">
@@ -127,8 +130,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       </main>
 
       <footer className="text-center p-8 text-sm text-zinc-500 dark:text-zinc-600">
-        <p>© 2025 Miracle Analytics. The future of financial intelligence.</p>
+        <p>
+          © 2025 Miracle Analytics. The future of financial intelligence. A project by{' '}
+          <button 
+            onClick={() => setIsCreatorModalOpen(true)} 
+            className="text-zinc-800 dark:text-zinc-300 hover:text-purple-500 dark:hover:text-purple-400 underline underline-offset-2 transition-colors"
+          >
+            Fadahunsi Miracle
+          </button>.
+        </p>
       </footer>
+
+      <CreatorModal isOpen={isCreatorModalOpen} onClose={() => setIsCreatorModalOpen(false)} />
     </div>
   );
 };
