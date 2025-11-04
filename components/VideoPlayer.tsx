@@ -1,27 +1,18 @@
 
 import React from 'react';
 
-interface VideoPlayerProps {
-  // The user should provide a direct link to their video file (e.g., .mp4, .webm)
-  videoSrc: string;
-}
-
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoSrc }) => {
+const VideoPlayer: React.FC = () => {
   return (
     <div className="relative aspect-video w-full max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl border-4 border-zinc-200 dark:border-zinc-800 bg-black">
-      <video
-        className="w-full h-full object-cover"
-        src={videoSrc}
-        controls
-        autoPlay
-        muted
-        loop
-        playsInline // Important for iOS
-        aria-label="Product demo video"
+      <iframe
+        className="absolute top-0 left-0 w-full h-full"
+        src="https://www.youtube.com/embed/JCp-VxTNOwY?autoplay=1&mute=1&loop=1&playlist=JCp-VxTNOwY&controls=0&rel=0"
+        frameBorder="0"
+        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+        referrerPolicy="strict-origin-when-cross-origin"
+        title="Miracle Analytics Dashboard"
       >
-        Your browser does not support the video tag.
-      </video>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
+      </iframe>
     </div>
   );
 };
