@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import LoginPage from './components/LoginPage';
@@ -9,7 +10,7 @@ import { CurrencyProvider } from './CurrencyContext';
 import LandingPage from './components/LandingPage';
 
 const AppContent = () => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, workspaceConfig } = useAuth();
   // Initialize based on whether a user is already logged in.
   // If no user, default to showing the landing page.
   const [showLanding, setShowLanding] = useState(!currentUser);
@@ -33,7 +34,17 @@ const AppContent = () => {
   }
 
   if (currentUser) {
-    return <Dashboard />;
+    // If the user is logged in, we must wait for their specific workspace config to load.
+    if (workspaceConfig) {
+      return <Dashboard />;
+    }
+    // While waiting for the config, show a specific loading state.
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
+        <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
+        <p className="text-lg text-zinc-300">Configuring Workspace...</p>
+      </div>
+    );
   }
 
   return showLanding 

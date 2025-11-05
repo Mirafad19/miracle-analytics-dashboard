@@ -650,14 +650,8 @@ export default function Dashboard() {
     );
   }
 
-  if (!workspaceConfig) {
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
-        <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
-        <p className="text-lg text-zinc-300">Configuring Workspace...</p>
-      </div>
-    );
-  }
+  // The loading screen for workspace config is now handled in App.tsx
+  // This component will only render when workspaceConfig is available.
 
   const selectedMonthLabel = selectedMonth === 'DefaultMonth' ? 'Current Period' : selectedMonth;
   const compareMonthLabel = selectedCompareMonth === 'DefaultMonth' ? 'Previous Period' : selectedCompareMonth;
