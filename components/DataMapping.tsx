@@ -28,7 +28,7 @@ const MAPPING_FIELDS = [
 ];
 
 export default function DataMapping() {
-  const { currentUser, reloadConfig } = useAuth();
+  const { currentUser, setWorkspaceConfig } = useAuth();
   const [columns, setColumns] = useState<string[]>([]);
   const [expenseColumns, setExpenseColumns] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string>('');
@@ -124,8 +124,8 @@ export default function DataMapping() {
 
     try {
       await db.collection('mappings').doc(currentUser.uid).set(configToSave);
-      // Trigger a reload of the auth context to fetch the new config and redirect
-      reloadConfig();
+      // OPTIMISTIC UPDATE: Set the config in the context directly for an instant redirect.
+      setWorkspaceConfig(configToSave);
     } catch (err: any) {
       setError(err.message || 'Failed to save configuration. Please try again.');
       setIsLoading(false);

@@ -24,10 +24,9 @@ export interface WorkspaceConfig {
 
 interface AuthContextType {
   currentUser: firebase.User | null;
-  authLoading: boolean;
-  configLoading: boolean;
+  isLoading: boolean;
   workspaceConfig: WorkspaceConfig | null;
-  reloadConfig: () => void; // Add a function to manually trigger a config reload
+  setWorkspaceConfig: (config: WorkspaceConfig | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,61 +38,40 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
   const [workspaceConfig, setWorkspaceConfig] = useState<WorkspaceConfig | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [configLoading, setConfigLoading] = useState(true);
-  const [reloadTrigger, setReloadTrigger] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const reloadConfig = () => setReloadTrigger(prev => prev + 1);
-
-  // Effect 1: Handle User Authentication State
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setCurrentUser(user);
-      setAuthLoading(false);
-    });
-    return unsubscribe; // Cleanup listener on unmount
-  }, []); // Run only once on component mount
-
-  // Effect 2: Handle Workspace Configuration Loading
-  useEffect(() => {
-    // This effect runs when the user logs in/out, or when a reload is triggered.
-    const fetchConfig = async () => {
-      // Don't do anything if we don't have a user object.
-      if (!currentUser) {
-        setWorkspaceConfig(null);
-        setConfigLoading(false); // No user means no config to load.
-        return;
-      }
-
-      setConfigLoading(true); // Start loading config for the current user.
-      try {
-        const mappingDoc = await db.collection('mappings').doc(currentUser.uid).get();
-        if (mappingDoc.exists) {
-          setWorkspaceConfig(mappingDoc.data() as WorkspaceConfig);
-        } else {
-          // No mapping found, user needs to set it up.
+      if (user) {
+        try {
+          const mappingDoc = await db.collection('mappings').doc(user.uid).get();
+          if (mappingDoc.exists) {
+            setWorkspaceConfig(mappingDoc.data() as WorkspaceConfig);
+          } else {
+            setWorkspaceConfig(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user mapping config:", error);
           setWorkspaceConfig(null);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error("Error fetching user mapping config:", error);
-        setWorkspaceConfig(null); // Force to mapping screen on error
-      } finally {
-        setConfigLoading(false); // Finish loading
+      } else {
+        // No user, no config, loading is done.
+        setWorkspaceConfig(null);
+        setIsLoading(false);
       }
-    };
-    
-    // We only run the fetch logic after the initial authentication check is complete.
-    if (!authLoading) {
-      fetchConfig();
-    }
-  }, [currentUser, reloadTrigger, authLoading]);
+    });
+
+    return unsubscribe; // Cleanup listener on unmount
+  }, []);
 
   const value = {
     currentUser,
-    authLoading,
-    configLoading,
+    isLoading,
     workspaceConfig,
-    reloadConfig,
+    setWorkspaceConfig, // Expose setter for optimistic updates
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
