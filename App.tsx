@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import LoginPage from './components/LoginPage';

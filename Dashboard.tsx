@@ -1,8 +1,6 @@
-
 import { useState, useMemo, useRef, ChangeEvent } from 'react';
 import * as XLSX from 'xlsx';
 import { auth } from './firebaseConfig';
-import { FileUpload, AllMonthsData } from './components/FileUpload';
 import { KPICard } from './components/KPICard';
 import { TrendChart, MergedTrendData } from './components/TrendChart';
 import { PieChartComponent } from './components/PieChart';
@@ -10,7 +8,7 @@ import { BarChartComponent } from './components/BarChart';
 import { DashboardFilters } from './components/DashboardFilters';
 import { Sidebar } from './components/Sidebar';
 import { LogoIconOnly } from './components/Logo';
-import { TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut, Upload, Sun, Moon, DollarSign, Spinner } from './components/Icons';
+import { TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut, Upload, Sun, Moon, DollarSign, Spinner, FileSpreadsheet } from './components/Icons';
 import { Button } from './components/ui/Button';
 import { AiChatButton, AiChatModal } from './components/AiChat';
 import { CreatorModal } from './components/CreatorModal';
@@ -18,6 +16,13 @@ import { useTheme } from './ThemeContext';
 import { useCurrency } from './CurrencyContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/Select';
 import { useAuth } from './AuthContext';
+
+interface AllMonthsData {
+  [month: string]: {
+    data: FinancialRecord[];
+    expenseCategories?: ExpenseCategoryRecord[];
+  };
+}
 
 // These interfaces are now generic, as the specific keys are dynamic
 interface FinancialRecord {
@@ -66,6 +71,7 @@ export default function Dashboard() {
   
   const handleDataUpload = (data: AllMonthsData) => {
     const normalizeRecordKeys = (records: any[]) => {
+      if (!records) return [];
       return records.map(record => {
         const newRecord: { [key: string]: any } = {};
         for (const key in record) {
@@ -110,7 +116,7 @@ export default function Dashboard() {
               const data = new Uint8Array(e.target?.result as ArrayBuffer);
               const workbook = XLSX.read(data, { type: 'array' });
               
-              const allMonthsData: AllMonthsData = {};
+              const allMonthsData: any = {}; // Use 'any' temporarily
               const monthMap = {
                 'Jan': 'January', 'Feb': 'February', 'Mar': 'March', 'Apr': 'April',
                 'May': 'May', 'Jun': 'June', 'Jul': 'July', 'Aug': 'August',
@@ -205,7 +211,6 @@ export default function Dashboard() {
 
   const processRawData = (rawData: FinancialRecord[], config: any) => {
     if (rawData.length === 0 || !config) return [];
-    // This function now primarily ensures numeric types, as keys are dynamic.
     return rawData.map(record => ({
       ...record,
       [config.incomeField]: Number(record[config.incomeField]) || 0,
@@ -272,7 +277,7 @@ export default function Dashboard() {
   }, [processedData, selectedDuty, dateRange, workspaceConfig]);
 
   const calculateKpis = (data: FinancialRecord[], config: any) => {
-    if (!config) return { income: 0, expenses: 0, netProfit: 0, profitMargin: 0 };
+    if (!config || !data) return { income: 0, expenses: 0, netProfit: 0, profitMargin: 0 };
     
     const income = data.reduce((sum, record) => {
       const mode = record[config.paymentModeField];
@@ -303,7 +308,7 @@ export default function Dashboard() {
   const comparisonKpis = useMemo(() => calculateKpis(processedComparisonData, workspaceConfig), [processedComparisonData, workspaceConfig]);
 
   const availableDuties = useMemo(() => {
-    if (!workspaceConfig) return [];
+    if (!workspaceConfig || !processedData) return [];
     const duties = [...new Set(processedData.map(record => record[workspaceConfig.departmentField]))];
     return duties.filter(duty => duty && String(duty).trim() !== '');
   }, [processedData, workspaceConfig]);
@@ -322,7 +327,7 @@ export default function Dashboard() {
   };
 
   const calculateTrendData = (data: FinancialRecord[], config: any) => {
-    if (!config) return [];
+    if (!config || !data) return [];
     const dailyData: Record<string, { income: number; expenses: number }> = {};
     data.forEach(record => {
       const dateValue = record[config.dateField];
@@ -358,9 +363,10 @@ export default function Dashboard() {
   const comparisonTrendData = useMemo(() => calculateTrendData(processedComparisonData, workspaceConfig), [processedComparisonData, workspaceConfig]);
 
   const mergedTrendData = useMemo<MergedTrendData[]>(() => {
+    if (!trendData) return [];
     const dataMap = new Map<string, { day: string; income: number; expenses: number; netProfit: number; }>(trendData.map(d => [d.day, d]));
     
-    if (!selectedCompareMonth) {
+    if (!selectedCompareMonth || !comparisonTrendData) {
       return Array.from(dataMap.values()).map(d => ({
         ...d,
         compareIncome: null,
@@ -400,7 +406,7 @@ export default function Dashboard() {
   };
 
   const calculateIncomeByPayment = (data: FinancialRecord[], config: any) => {
-    if (!config) return [];
+    if (!config || !data) return [];
     const paymentData: Record<string, number> = {};
     
     data.forEach(record => {
@@ -410,7 +416,7 @@ export default function Dashboard() {
       if (mode?.toLowerCase().includes(config.cashBfIdentifier) || 
           mode?.toLowerCase().includes(config.cashBalanceIdentifier) ||
           mode === config.expenseModeIdentifier ||
-          amount <= 0) {
+          !amount || amount <= 0) {
         return;
       }
 
@@ -428,7 +434,7 @@ export default function Dashboard() {
   const comparisonIncomeByPayment = useMemo(() => calculateIncomeByPayment(processedComparisonData, workspaceConfig), [processedComparisonData, workspaceConfig]);
 
   const calculateExpensesByCategory = (expenseData: ExpenseCategoryRecord[], duty: string | null, config: any) => {
-    if (!config || expenseData.length === 0) return [];
+    if (!config || !expenseData || expenseData.length === 0) return [];
       
     const categoryTotals: Record<string, number> = {};
     const excludedColumns = [config.expenseCategoryDateField, config.expenseCategoryDepartmentField, config.expenseCategoryPurposeField, 's/n'].map(c => c.toLowerCase());
@@ -467,7 +473,7 @@ export default function Dashboard() {
   const comparisonExpensesByCategory = useMemo(() => calculateExpensesByCategory(comparisonExpenseCategories, selectedDuty, workspaceConfig), [comparisonExpenseCategories, selectedDuty, workspaceConfig]);
 
   const accountsReceivable = useMemo(() => {
-    if (!workspaceConfig) return [];
+    if (!workspaceConfig || !filteredData) return [];
     return filteredData
       .filter(record => record[workspaceConfig.balanceField] > 0)
       .map(record => ({
@@ -480,7 +486,7 @@ export default function Dashboard() {
   }, [filteredData, workspaceConfig]);
 
   const comparisonAccountsReceivable = useMemo(() => {
-    if (!selectedCompareMonth || !workspaceConfig) return [];
+    if (!selectedCompareMonth || !workspaceConfig || !processedComparisonData) return [];
     return processedComparisonData
       .filter(record => record[workspaceConfig.balanceField] > 0)
       .map(record => ({
@@ -493,12 +499,13 @@ export default function Dashboard() {
   }, [processedComparisonData, selectedCompareMonth, workspaceConfig]);
 
   const totalReceivables = useMemo(() => {
+    if (!accountsReceivable) return 0;
     return accountsReceivable.reduce((sum, item) => sum + item.amount, 0);
   }, [accountsReceivable]);
 
   const financialSummary = useMemo(() => {
     const generateSingleMonthSummary = (monthLabel: string, kpisData: any, incomeData: any[], expenseData: any[], arData: any[], totalAr: number) => {
-        let summary = `\nHospital Financial Report Summary for ${monthLabel === 'DefaultMonth' ? 'the selected period' : monthLabel}:\n`;
+        let summary = `\nFinancial Report Summary for ${monthLabel === 'DefaultMonth' ? 'the selected period' : monthLabel}:\n`;
         if (selectedDuty) {
             summary += `Data is filtered for the ${selectedDuty} department.\n\n`;
         }
@@ -529,6 +536,8 @@ export default function Dashboard() {
         return summary;
     };
 
+    if (!kpis || !incomeByPayment || !expensesByCategory || !accountsReceivable) return "Analyzing data...";
+
     if (selectedCompareMonth && comparisonKpis) {
         let summary = `This is a comparative financial analysis between ${selectedMonth} and ${selectedCompareMonth}.\n\n`;
         
@@ -547,9 +556,9 @@ export default function Dashboard() {
         summary += `\n\n=== Detailed Report for ${selectedMonth} ===`;
         summary += generateSingleMonthSummary(selectedMonth, kpis, incomeByPayment, expensesByCategory, accountsReceivable, totalReceivables);
 
-        const totalComparisonReceivables = comparisonAccountsReceivable.reduce((sum, item) => sum + item.amount, 0);
+        const totalComparisonReceivables = (comparisonAccountsReceivable || []).reduce((sum: number, item: any) => sum + item.amount, 0);
         summary += `\n\n=== Detailed Report for ${selectedCompareMonth} ===`;
-        summary += generateSingleMonthSummary(selectedCompareMonth, comparisonKpis, comparisonIncomeByPayment, comparisonExpensesByCategory, comparisonAccountsReceivable, totalComparisonReceivables);
+        summary += generateSingleMonthSummary(selectedCompareMonth, comparisonKpis, comparisonIncomeByPayment, comparisonExpensesByCategory, comparisonAccountsReceivable || [], totalComparisonReceivables);
 
         return summary;
     } else {
@@ -608,7 +617,7 @@ export default function Dashboard() {
       const matchingRecords = dataToFilter.filter(record => {
         const mode = record[workspaceConfig.paymentModeField];
         const amount = record[workspaceConfig.incomeField];
-        if (mode?.toLowerCase().includes(workspaceConfig.cashBfIdentifier) || mode?.toLowerCase().includes(workspaceConfig.cashBalanceIdentifier) || mode === workspaceConfig.expenseModeIdentifier || amount <= 0) {
+        if (mode?.toLowerCase().includes(workspaceConfig.cashBfIdentifier) || mode?.toLowerCase().includes(workspaceConfig.cashBalanceIdentifier) || mode === workspaceConfig.expenseModeIdentifier || !amount || amount <= 0) {
           return false;
         }
         return normalizePaymentMethod(mode) === normalizedSegment;
@@ -627,36 +636,6 @@ export default function Dashboard() {
     }
   };
 
-  if (!monthlyData) {
-    // This check is now safe because App.tsx guarantees workspaceConfig is loaded.
-    if (!workspaceConfig) {
-      // This should theoretically not be reached due to the logic in App.tsx,
-      // but it's good practice as a fallback.
-      return null;
-    }
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative">
-        <div className="absolute top-6 right-6">
-          <Button 
-            onClick={handleSignOut} 
-            className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-colors flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </Button>
-        </div>
-        <div className="text-center mb-8">
-            <LogoIconOnly />
-            <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-2 mt-4">
-                Miracle Analytics
-            </h1>
-            <p className="text-lg text-blue-200">Financial Intelligence Dashboard</p>
-        </div>
-        <FileUpload onDataUploaded={handleDataUpload} />
-      </div>
-    );
-  }
-
   const selectedMonthLabel = selectedMonth === 'DefaultMonth' ? 'Current Period' : selectedMonth;
   const compareMonthLabel = selectedCompareMonth === 'DefaultMonth' ? 'Previous Period' : selectedCompareMonth;
 
@@ -671,12 +650,12 @@ export default function Dashboard() {
             <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 mt-2">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-purple-500 dark:text-purple-400" />
-                <span>{filteredData.length} Records</span>
+                <span>{monthlyData ? filteredData.length : 0} Records</span>
               </div>
               <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700"></div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-purple-500 dark:text-purple-400" />
-                <span>{selectedMonthLabel} Analysis</span>
+                <span>{monthlyData ? `${selectedMonthLabel} Analysis` : 'No Data Loaded'}</span>
               </div>
             </div>
           </div>
@@ -718,64 +697,82 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <div className="bg-white/50 dark:bg-black/50 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 mb-8 relative z-20">
-            <DashboardFilters 
-                selectedDuty={selectedDuty}
-                onDutyChange={setSelectedDuty}
-                availableDuties={availableDuties}
-                dateRange={dateRange}
-                onDateChange={setDateRange}
-                selectedMonth={selectedMonth}
-                onMonthChange={handleMonthChange}
-                availableMonths={availableMonths}
-                selectedCompareMonth={selectedCompareMonth}
-                onCompareMonthChange={setSelectedCompareMonth}
-            />
-        </div>
+        {!monthlyData ? (
+           <div className="flex flex-col items-center justify-center text-center py-20 px-6 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+              <FileSpreadsheet className="h-16 w-16 text-purple-400 mb-6"/>
+              <h2 className="text-3xl font-bold text-black dark:text-white mb-2">Welcome to Your Dashboard</h2>
+              <p className="text-zinc-600 dark:text-zinc-400 max-w-lg mb-8">
+                To get started, please upload your financial spreadsheet. Your insights are just a click away.
+              </p>
+              <Button 
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-lg px-8 py-3"
+              >
+                  Upload Your First File
+              </Button>
+           </div>
+        ) : (
+          <>
+            <div className="bg-white/50 dark:bg-black/50 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 mb-8 relative z-20">
+                <DashboardFilters 
+                    selectedDuty={selectedDuty}
+                    onDutyChange={setSelectedDuty}
+                    availableDuties={availableDuties}
+                    dateRange={dateRange}
+                    onDateChange={setDateRange}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={handleMonthChange}
+                    availableMonths={availableMonths}
+                    selectedCompareMonth={selectedCompareMonth}
+                    onCompareMonthChange={setSelectedCompareMonth}
+                />
+            </div>
 
-        <main className="space-y-8">
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            <KPICard title="Total Income" value={kpis.income} type="income" compareValue={comparisonKpis?.income} compareLabel={compareMonthLabel} />
-            <KPICard title="Total Expenses" value={kpis.expenses} type="expense" compareValue={comparisonKpis?.expenses} compareLabel={compareMonthLabel} />
-            <KPICard title="Net Profit" value={kpis.netProfit} type="profit" compareValue={comparisonKpis?.netProfit} compareLabel={compareMonthLabel} />
-            <KPICard title="Profit Margin" value={kpis.profitMargin} type="margin" compareValue={comparisonKpis?.profitMargin} compareLabel={compareMonthLabel} />
-            <KPICard title="Total A/R" value={totalReceivables} type="receivables" count={accountsReceivable.length} />
-          </section>
+            <main className="space-y-8">
+              <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <KPICard title="Total Income" value={kpis.income} type="income" compareValue={comparisonKpis?.income} compareLabel={compareMonthLabel} />
+                <KPICard title="Total Expenses" value={kpis.expenses} type="expense" compareValue={comparisonKpis?.expenses} compareLabel={compareMonthLabel} />
+                <KPICard title="Net Profit" value={kpis.netProfit} type="profit" compareValue={comparisonKpis?.netProfit} compareLabel={compareMonthLabel} />
+                <KPICard title="Profit Margin" value={kpis.profitMargin} type="margin" compareValue={comparisonKpis?.profitMargin} compareLabel={compareMonthLabel} />
+                <KPICard title="Total A/R" value={totalReceivables} type="receivables" count={accountsReceivable.length} />
+              </section>
 
-          <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
-            <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Financial Performance Trends</h2>
-            <TrendChart data={mergedTrendData} compareLabel={compareMonthLabel} />
-          </section>
+              <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Financial Performance Trends</h2>
+                <TrendChart data={mergedTrendData} compareLabel={compareMonthLabel} />
+              </section>
 
-          <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-1">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><PieChartIcon className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Revenue by Payment Mode</h2>
-                    <Button onClick={() => handleSegmentClick('payment', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
+              <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-1">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><PieChartIcon className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Revenue by Payment Mode</h2>
+                        <Button onClick={() => handleSegmentClick('payment', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
+                    </div>
+                  <PieChartComponent title="Revenue by Payment Mode" data={incomeByPayment} onSegmentClick={(segment) => handleSegmentClick('payment', segment, 'primary')} />
                 </div>
-              <PieChartComponent title="Revenue by Payment Mode" data={incomeByPayment} onSegmentClick={(segment) => handleSegmentClick('payment', segment, 'primary')} />
-            </div>
-            
-            <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-2">
-              <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><Filter className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Accounts Receivable</h2>
-              <BarChartComponent 
-                title="Accounts Receivable by Patient" 
-                data={accountsReceivable} 
-                compareData={comparisonAccountsReceivable} 
-                primaryLabel={selectedMonthLabel}
-                compareLabel={compareMonthLabel}
-              />
-            </div>
-          </section>
+                
+                <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-2">
+                  <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><Filter className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Accounts Receivable</h2>
+                  <BarChartComponent 
+                    title="Accounts Receivable by Patient" 
+                    data={accountsReceivable} 
+                    compareData={comparisonAccountsReceivable} 
+                    primaryLabel={selectedMonthLabel}
+                    compareLabel={compareMonthLabel}
+                  />
+                </div>
+              </section>
 
-           <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><BarChart3 className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Expense Distribution</h2>
-                <Button onClick={() => handleSegmentClick('expense', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
-              </div>
-            <PieChartComponent title="Expense Distribution" data={expensesByCategory} onSegmentClick={(segment) => handleSegmentClick('expense', segment, 'primary')} />
-          </section>
-        </main>
+               <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><BarChart3 className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Expense Distribution</h2>
+                    <Button onClick={() => handleSegmentClick('expense', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
+                  </div>
+                <PieChartComponent title="Expense Distribution" data={expensesByCategory} onSegmentClick={(segment) => handleSegmentClick('expense', segment, 'primary')} />
+              </section>
+            </main>
+          </>
+        )}
 
         <footer className="text-center pt-12 text-sm text-zinc-600 dark:text-zinc-500">
           <p>

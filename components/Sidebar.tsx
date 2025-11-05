@@ -1,4 +1,3 @@
-// FIX: Imported `useState` from React to resolve `Cannot find name 'useState'` errors.
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { X, Table, PieChart as PieChartIcon, BarChart3, TrendingUp, FileText } from './Icons';
@@ -6,12 +5,9 @@ import { Button } from './ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Sector, Legend } from 'recharts';
 import { useCurrency } from '../CurrencyContext';
+import { useAuth, WorkspaceConfig } from '../AuthContext';
 
 interface FinancialRecord {
-  'Amt. Paid': number;
-  'Date': string | number;
-  'Purpose': string;
-  'Name': string;
   [key: string]: any;
 }
 
@@ -161,6 +157,7 @@ export const Sidebar = ({
   detailsContext
 }: SidebarProps) => {
   const { formatCurrency } = useCurrency();
+  const { workspaceConfig } = useAuth();
 
   const formatDate = (dateValue: unknown): string => {
     if (!dateValue) return 'N/A';
@@ -185,13 +182,12 @@ export const Sidebar = ({
       onSegmentClick(section, null, 'primary'); // Reset selection when changing section
   }
 
-  const isFinancialRecord = (record: any): record is FinancialRecord => 'Amt. Paid' in record;
   const isExpenseRecord = (record: any): record is ExpenseTransactionRecord => 'ExpenseAmount' in record;
   const isCompareMode = !!compareMonthLabel;
   
   const totalSelectedAmount = selectedSegmentData.reduce((sum, record) => {
-    if (isFinancialRecord(record)) {
-      return sum + record['Amt. Paid'];
+    if (workspaceConfig && !isExpenseRecord(record) && record[workspaceConfig.incomeField]) {
+      return sum + record[workspaceConfig.incomeField];
     }
     if (isExpenseRecord(record)) {
       return sum + record.ExpenseAmount;
@@ -243,7 +239,7 @@ export const Sidebar = ({
           )}
         </div>
             
-        {selectedSegment && selectedSegmentData.length > 0 && (
+        {selectedSegment && selectedSegmentData.length > 0 && workspaceConfig && (
           <div className="mt-6">
             <Card>
                 <CardHeader>
@@ -263,7 +259,7 @@ export const Sidebar = ({
                             {activeSection === 'payment' ? (
                                 <>
                                     <thead><tr className="sticky top-0 bg-gray-100 dark:bg-zinc-950 backdrop-blur-sm"><th className="p-3 text-left text-zinc-600 dark:text-zinc-300">Date</th><th className="p-3 text-left text-zinc-600 dark:text-zinc-300">Patient Name</th><th className="p-3 text-left text-zinc-600 dark:text-zinc-300">Purpose</th><th className="p-3 text-right text-zinc-600 dark:text-zinc-300">Amount</th></tr></thead>
-                                    <tbody>{selectedSegmentData.map((record, index) => isFinancialRecord(record) && (<tr key={index} className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 even:bg-gray-50/40 dark:even:bg-black/40"><td className="p-3 text-blue-600 dark:text-blue-300">{formatDate(record.Date)}</td><td className="p-3 text-black dark:text-white">{record.Name || 'N/A'}</td><td className="p-3 text-zinc-700 dark:text-zinc-300">{record.Purpose || 'N/A'}</td><td className="p-3 text-right text-green-600 dark:text-green-400 font-medium">{formatCurrency(record['Amt. Paid'])}</td></tr>))}</tbody>
+                                    <tbody>{selectedSegmentData.map((record, index) => !isExpenseRecord(record) && (<tr key={index} className="border-b border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 even:bg-gray-50/40 dark:even:bg-black/40"><td className="p-3 text-blue-600 dark:text-blue-300">{formatDate(record[workspaceConfig.dateField])}</td><td className="p-3 text-black dark:text-white">{record[workspaceConfig.nameField] || 'N/A'}</td><td className="p-3 text-zinc-700 dark:text-zinc-300">{record[workspaceConfig.purposeField] || 'N/A'}</td><td className="p-3 text-right text-green-600 dark:text-green-400 font-medium">{formatCurrency(record[workspaceConfig.incomeField])}</td></tr>))}</tbody>
                                 </>
                             ) : (
                                 <>
