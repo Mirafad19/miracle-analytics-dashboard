@@ -41,24 +41,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // This listener handles authentication state changes.
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setCurrentUser(user);
+      
+      // The logic is now sequential: once we know the user's status, we fetch their config.
       if (user) {
         try {
           const mappingDoc = await db.collection('mappings').doc(user.uid).get();
           if (mappingDoc.exists) {
             setWorkspaceConfig(mappingDoc.data() as WorkspaceConfig);
           } else {
+            // User is logged in but has no mapping config.
             setWorkspaceConfig(null);
           }
         } catch (error) {
           console.error("Error fetching user mapping config:", error);
-          setWorkspaceConfig(null);
+          setWorkspaceConfig(null); // Set to null on error to be safe
         } finally {
+          // Loading is only finished after the config has been fetched.
           setIsLoading(false);
         }
       } else {
-        // No user, no config, loading is done.
+        // If there's no user, there's no config to fetch. Loading is done.
         setWorkspaceConfig(null);
         setIsLoading(false);
       }
@@ -71,7 +76,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     currentUser,
     isLoading,
     workspaceConfig,
-    setWorkspaceConfig, // Expose setter for optimistic updates
+    setWorkspaceConfig, // Expose setter for optimistic updates from the DataMapping component
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

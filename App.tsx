@@ -12,6 +12,7 @@ const AppContent = () => {
   const { currentUser, isLoading, workspaceConfig } = useAuth();
   const [showLoginPage, setShowLoginPage] = useState(false);
 
+  // This is the single, unified loading screen. It shows until both auth and config state are resolved.
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
@@ -21,13 +22,14 @@ const AppContent = () => {
     );
   }
 
+  // After loading, route based on the resolved state.
   if (currentUser) {
-    // If user is logged in, they either see the dashboard or the mapping setup.
-    // The loading of the config is already handled by the `isLoading` check above.
+    // If a user is logged in, they either see their dashboard or the one-time mapping setup.
+    // The workspaceConfig is guaranteed to be resolved (either as an object or null) at this point.
     return workspaceConfig ? <Dashboard /> : <DataMapping />;
   }
 
-  // If no user, show either the landing page or the login page.
+  // If no user is logged in, show either the landing page or the login page.
   if (showLoginPage) {
     return <LoginPage onBackToHome={() => setShowLoginPage(false)} />;
   }

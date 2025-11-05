@@ -27,6 +27,13 @@ const MAPPING_FIELDS = [
   { id: 'expenseCategoryPurposeField', label: 'Expense Purpose', required: false, sheet: 'Expenses' },
 ];
 
+// Define some sensible defaults for identifiers that users won't map
+const DEFAULT_IDENTIFIERS = {
+  expenseModeIdentifier: 'EXP',
+  cashBfIdentifier: 'cash b/f',
+  cashBalanceIdentifier: 'cash balance',
+};
+
 export default function DataMapping() {
   const { currentUser, setWorkspaceConfig } = useAuth();
   const [columns, setColumns] = useState<string[]>([]);
@@ -57,7 +64,7 @@ export default function DataMapping() {
         const mainSheetName = workbook.SheetNames[0];
         const mainWorksheet = workbook.Sheets[mainSheetName];
         const mainData = XLSX.utils.sheet_to_json<{[key: string]: any}>(mainWorksheet, { header: 1 });
-        const mainHeaders = mainData[0] ? mainData[0].map(String) : [];
+        const mainHeaders = mainData[0] ? mainData[0].map(String).filter(h => h.trim() !== '') : [];
         setColumns(mainHeaders);
 
         // Extract columns from the second sheet (Expenses), if it exists
@@ -65,7 +72,7 @@ export default function DataMapping() {
           const expenseSheetName = workbook.SheetNames[1];
           const expenseWorksheet = workbook.Sheets[expenseSheetName];
           const expenseData = XLSX.utils.sheet_to_json<{[key: string]: any}>(expenseWorksheet, { header: 1 });
-          const expenseHeaders = expenseData[0] ? expenseData[0].map(String) : [];
+          const expenseHeaders = expenseData[0] ? expenseData[0].map(String).filter(h => h.trim() !== '') : [];
           setExpenseColumns(expenseHeaders);
         } else {
           setExpenseColumns([]); // No second sheet
@@ -99,7 +106,7 @@ export default function DataMapping() {
       return;
     }
 
-    // Validate required fields
+    // Validate that all required fields have a selection
     for (const field of MAPPING_FIELDS) {
       if (field.required && !mapping[field.id as keyof WorkspaceConfig]) {
         setError(`Please map the required field: "${field.label}"`);
@@ -110,25 +117,29 @@ export default function DataMapping() {
     setIsLoading(true);
     setError(null);
     
+    // Construct the full configuration object to be saved
     const configToSave: WorkspaceConfig = {
-      // Set defaults for identifiers
-      expenseModeIdentifier: 'EXP',
-      cashBfIdentifier: 'cash b/f',
-      cashBalanceIdentifier: 'cash balance',
-      // Fill in mapped fields, using empty strings for unmapped optional fields
+      ...DEFAULT_IDENTIFIERS,
       ...MAPPING_FIELDS.reduce((acc, field) => {
+        // Ensure every field has a value, even if it's an empty string for unmapped optional fields
         acc[field.id as keyof WorkspaceConfig] = mapping[field.id as keyof WorkspaceConfig] || '';
         return acc;
       }, {} as any)
     };
 
     try {
+      // Save the configuration to the database
       await db.collection('mappings').doc(currentUser.uid).set(configToSave);
-      // OPTIMISTIC UPDATE: Set the config in the context directly for an instant redirect.
+      
+      // OPTIMISTIC UI UPDATE: This is the key change.
+      // We update the AuthContext's state directly. This will cause App.tsx
+      // to re-render, see that workspaceConfig now exists, and immediately
+      // switch to rendering the Dashboard component, avoiding any loading screens.
       setWorkspaceConfig(configToSave);
+
     } catch (err: any) {
       setError(err.message || 'Failed to save configuration. Please try again.');
-      setIsLoading(false);
+      setIsLoading(false); // Only set loading to false on error, success causes a component unmount
     }
   };
   
@@ -147,10 +158,12 @@ export default function DataMapping() {
       </div>
       <div className="w-full max-w-4xl mx-auto">
         <div className="text-center mb-10">
-          <Logo />
+          <div className="flex justify-center">
+            <Logo />
+          </div>
           <h2 className="text-4xl font-extrabold mt-4">One-Time Workspace Setup</h2>
           <p className="text-lg text-zinc-400 mt-2 max-w-2xl mx-auto">
-            Let's configure Miracle Analytics to understand your data. Please upload a sample Excel file.
+            To get started, please upload your financial spreadsheet. We'll help you map the columns to our system.
           </p>
         </div>
 
@@ -179,7 +192,7 @@ export default function DataMapping() {
             </div>
 
             <h3 className="text-2xl font-bold mb-6">Map Your Data Columns</h3>
-            <p className="text-zinc-400 mb-6">Match the fields our system needs with the corresponding column names from your file.</p>
+            <p className="text-zinc-400 mb-6">Match the fields our system needs with the corresponding column names from your file. The first sheet in your Excel file will be treated as the 'Main Data' source, and the second sheet as the 'Expenses' source (if it exists).</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               {MAPPING_FIELDS.map(field => {
@@ -196,7 +209,7 @@ export default function DataMapping() {
                         <SelectValue placeholder="Select a column..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value=""><em>None</em></SelectItem>
+                        <SelectItem value=""><em>None (Optional)</em></SelectItem>
                         {availableColumns.map(col => (
                           <SelectItem key={col} value={col}>{col}</SelectItem>
                         ))}
