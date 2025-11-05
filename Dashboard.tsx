@@ -59,17 +59,6 @@ export default function Dashboard() {
   const { theme, setTheme } = useTheme();
   const { currency, setCurrency, formatCurrency } = useCurrency();
 
-  // Re-introduce the workspace configuration check at the top of the component.
-  // This ensures the dashboard doesn't try to render until its essential configuration is loaded.
-  if (!workspaceConfig) {
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
-        <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
-        <p className="text-lg text-zinc-300">Configuring Workspace...</p>
-      </div>
-    );
-  }
-
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
@@ -365,7 +354,6 @@ export default function Dashboard() {
   };
 
   const trendData = useMemo(() => calculateTrendData(filteredData, workspaceConfig), [filteredData, workspaceConfig]);
-  // FIX: Corrected the dependency array for `comparisonTrendData` to use `processedComparisonData` instead of referring to itself.
   const comparisonTrendData = useMemo(() => calculateTrendData(processedComparisonData, workspaceConfig), [processedComparisonData, workspaceConfig]);
 
   const mergedTrendData = useMemo<MergedTrendData[]>(() => {
@@ -658,6 +646,15 @@ export default function Dashboard() {
             <p className="text-lg text-blue-200">Financial Intelligence Dashboard</p>
         </div>
         <FileUpload onDataUploaded={handleDataUpload} />
+      </div>
+    );
+  }
+
+  if (!workspaceConfig) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
+        <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
+        <p className="text-lg text-zinc-300">Configuring Workspace...</p>
       </div>
     );
   }

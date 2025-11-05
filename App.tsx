@@ -1,6 +1,5 @@
 
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import LoginPage from './components/LoginPage';
 import Dashboard from './Dashboard';
@@ -11,29 +10,35 @@ import LandingPage from './components/LandingPage';
 
 const AppContent = () => {
   const { currentUser, loading } = useAuth();
-  const [showLoginPage, setShowLoginPage] = useState(false);
+  // Initialize based on whether a user is already logged in.
+  // If no user, default to showing the landing page.
+  const [showLanding, setShowLanding] = useState(!currentUser);
 
-  // 1. Show a generic loading screen while the initial authentication check is running.
+  useEffect(() => {
+    // This effect runs when the authentication state changes.
+    // If the user logs out (currentUser becomes null), we ensure
+    // the landing page is shown next.
+    if (!currentUser) {
+      setShowLanding(true);
+    }
+  }, [currentUser]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
         <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
-        <p className="text-lg text-zinc-300">Initializing...</p>
+        <p className="text-lg text-zinc-300">Loading Dashboard...</p>
       </div>
     );
   }
 
-  // 2. If a user is logged in, show the main Dashboard component.
   if (currentUser) {
     return <Dashboard />;
   }
 
-  // 3. If no user is logged in, manage showing the Landing Page or Login Page.
-  if (showLoginPage) {
-    return <LoginPage onBackToHome={() => setShowLoginPage(false)} />;
-  }
-  
-  return <LandingPage onLoginClick={() => setShowLoginPage(true)} />;
+  return showLanding 
+    ? <LandingPage onLoginClick={() => setShowLanding(false)} /> 
+    : <LoginPage onBackToHome={() => setShowLanding(true)} />;
 };
 
 export default function App() {
