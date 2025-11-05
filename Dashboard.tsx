@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useRef, ChangeEvent } from 'react';
 import * as XLSX from 'xlsx';
 import { auth } from './firebaseConfig';
@@ -627,6 +628,12 @@ export default function Dashboard() {
   };
 
   if (!monthlyData) {
+    // This check is now safe because App.tsx guarantees workspaceConfig is loaded.
+    if (!workspaceConfig) {
+      // This should theoretically not be reached due to the logic in App.tsx,
+      // but it's good practice as a fallback.
+      return null;
+    }
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative">
         <div className="absolute top-6 right-6">
@@ -646,15 +653,6 @@ export default function Dashboard() {
             <p className="text-lg text-blue-200">Financial Intelligence Dashboard</p>
         </div>
         <FileUpload onDataUploaded={handleDataUpload} />
-      </div>
-    );
-  }
-
-  if (!workspaceConfig) {
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
-        <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
-        <p className="text-lg text-zinc-300">Configuring Workspace...</p>
       </div>
     );
   }

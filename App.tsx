@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import LoginPage from './components/LoginPage';
 import Dashboard from './Dashboard';
@@ -9,36 +10,40 @@ import { CurrencyProvider } from './CurrencyContext';
 import LandingPage from './components/LandingPage';
 
 const AppContent = () => {
-  const { currentUser, loading } = useAuth();
-  // Initialize based on whether a user is already logged in.
-  // If no user, default to showing the landing page.
-  const [showLanding, setShowLanding] = useState(!currentUser);
+  const { currentUser, authLoading, configLoading } = useAuth();
+  const [showLoginPage, setShowLoginPage] = useState(false);
 
-  useEffect(() => {
-    // This effect runs when the authentication state changes.
-    // If the user logs out (currentUser becomes null), we ensure
-    // the landing page is shown next.
-    if (!currentUser) {
-      setShowLanding(true);
-    }
-  }, [currentUser]);
-
-  if (loading) {
+  // 1. Show the initial loading spinner while firebase auth is initializing.
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
         <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
-        <p className="text-lg text-zinc-300">Loading Dashboard...</p>
+        <p className="text-lg text-zinc-300">Initializing...</p>
       </div>
     );
   }
 
+  // 2. If a user is logged in, but we are still fetching their specific config, show a dedicated loading screen.
+  if (currentUser && configLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
+        <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
+        <p className="text-lg text-zinc-300">Configuring Workspace...</p>
+      </div>
+    );
+  }
+
+  // 3. If a user is logged in and their config is loaded, show the dashboard.
   if (currentUser) {
     return <Dashboard />;
   }
 
-  return showLanding 
-    ? <LandingPage onLoginClick={() => setShowLanding(false)} /> 
-    : <LoginPage onBackToHome={() => setShowLanding(true)} />;
+  // 4. If no user, handle the public-facing pages (Landing/Login).
+  if (showLoginPage) {
+    return <LoginPage onBackToHome={() => setShowLoginPage(false)} />;
+  }
+  
+  return <LandingPage onLoginClick={() => setShowLoginPage(true)} />;
 };
 
 export default function App() {
