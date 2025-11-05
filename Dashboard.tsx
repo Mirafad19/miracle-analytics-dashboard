@@ -1,36 +1,51 @@
+
+
 import { useState, useMemo, useRef, ChangeEvent } from 'react';
 import * as XLSX from 'xlsx';
 import { auth } from './firebaseConfig';
+// FIX: Switched to Firebase v8 compatibility method `auth.signOut`, so this import is no longer needed.
+// import { signOut } from 'firebase/auth';
+import { FileUpload, AllMonthsData } from './components/FileUpload';
 import { KPICard } from './components/KPICard';
 import { TrendChart, MergedTrendData } from './components/TrendChart';
 import { PieChartComponent } from './components/PieChart';
 import { BarChartComponent } from './components/BarChart';
 import { DashboardFilters } from './components/DashboardFilters';
 import { Sidebar } from './components/Sidebar';
-import { LogoIconOnly } from './components/Logo';
-import { TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut, Upload, Sun, Moon, DollarSign, Spinner, FileSpreadsheet } from './components/Icons';
+import { Activity, TrendingUp, BarChart3, PieChart as PieChartIcon, Calendar, Filter, MousePointer, LogOut, Upload, Sun, Moon, DollarSign } from './components/Icons';
 import { Button } from './components/ui/Button';
 import { AiChatButton, AiChatModal } from './components/AiChat';
 import { CreatorModal } from './components/CreatorModal';
 import { useTheme } from './ThemeContext';
 import { useCurrency } from './CurrencyContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/Select';
-import { useAuth } from './AuthContext';
 
-interface AllMonthsData {
-  [month: string]: {
-    data: FinancialRecord[];
-    expenseCategories?: ExpenseCategoryRecord[];
-  };
-}
-
-// These interfaces are now generic, as the specific keys are dynamic
 interface FinancialRecord {
-  [key: string]: any;
+  'Amt. Paid': number;
+  'Exp.': number;
+  'Date': string | number;
+  'Duty': string;
+  'Mode': string;
+  'Purpose': string;
+  'Name': string;
+  'To Balance': number;
+  'Workers': number;
+  'S/N': number;
 }
 
 interface ExpenseCategoryRecord {
-  [key: string]: any; 
+  Date?: string | number;
+  DUTY?: string;
+  Purpose?: string;
+  'Transportation/Errands'?: number;
+  Refunds?: number;
+  'Purchases of Drugs'?: number;
+  'Payments of Services'?: number;
+  Utilities?: number;
+  'Equipment/Maintenance Fee'?: number;
+  'Salary & Wages'?: number;
+  'Miscellaneous Expense'?: number;
+  [key: string]: any; // To allow for dynamic misc expense columns
 }
 
 interface ExpenseTransactionRecord {
@@ -44,8 +59,6 @@ interface ExpenseTransactionRecord {
 }
 
 export default function Dashboard() {
-  const { workspaceConfig } = useAuth();
-  
   const [monthlyData, setMonthlyData] = useState<AllMonthsData | null>(null);
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
@@ -71,7 +84,6 @@ export default function Dashboard() {
   
   const handleDataUpload = (data: AllMonthsData) => {
     const normalizeRecordKeys = (records: any[]) => {
-      if (!records) return [];
       return records.map(record => {
         const newRecord: { [key: string]: any } = {};
         for (const key in record) {
@@ -116,7 +128,7 @@ export default function Dashboard() {
               const data = new Uint8Array(e.target?.result as ArrayBuffer);
               const workbook = XLSX.read(data, { type: 'array' });
               
-              const allMonthsData: any = {}; // Use 'any' temporarily
+              const allMonthsData: AllMonthsData = {};
               const monthMap = {
                 'Jan': 'January', 'Feb': 'February', 'Mar': 'March', 'Apr': 'April',
                 'May': 'May', 'Jun': 'June', 'Jul': 'July', 'Aug': 'August',
@@ -209,19 +221,24 @@ export default function Dashboard() {
     };
   }, [monthlyData, selectedCompareMonth]);
 
-  const processRawData = (rawData: FinancialRecord[], config: any) => {
-    if (rawData.length === 0 || !config) return [];
+  const processRawData = (rawData: FinancialRecord[]) => {
+    if (rawData.length === 0) return [];
     return rawData.map(record => ({
       ...record,
-      [config.incomeField]: Number(record[config.incomeField]) || 0,
-      [config.expenseField]: Number(record[config.expenseField]) || 0,
-      [config.balanceField]: Number(record[config.balanceField]) || 0,
-      [config.workersField]: Number(record[config.workersField]) || 0,
+      'Amt. Paid': Number(record['Amt. Paid']) || 0,
+      'Exp.': Number(record['Exp.']) || 0,
+      'To Balance': Number(record['To Balance']) || 0,
+      'Workers': Number(record['Workers']) || 0,
+      'Date': record['Date'] || '',
+      'Duty': record['Duty'] || '',
+      'Mode': record['Mode'] || 'Cash',
+      'Purpose': record['Purpose'] || (record as any)['purpose'] || '',
+      'Name': record['Name'] || '',
     }));
   };
-  
-  const processedData = useMemo(() => processRawData(currentRawData, workspaceConfig), [currentRawData, workspaceConfig]);
-  const processedComparisonData = useMemo(() => processRawData(comparisonRawData, workspaceConfig), [comparisonRawData, workspaceConfig]);
+
+  const processedData = useMemo(() => processRawData(currentRawData), [currentRawData]);
+  const processedComparisonData = useMemo(() => processRawData(comparisonRawData), [comparisonRawData]);
 
   const parseDate = (dateValue: string | number): Date | null => {
     if (!dateValue) return null;
@@ -250,11 +267,10 @@ export default function Dashboard() {
   };
 
   const filteredData = useMemo(() => {
-    if (!workspaceConfig) return [];
     let dataToFilter = processedData;
 
     if (selectedDuty) {
-      dataToFilter = dataToFilter.filter(record => record[workspaceConfig.departmentField] === selectedDuty);
+      dataToFilter = dataToFilter.filter(record => record.Duty === selectedDuty);
     }
     
     const { start, end } = dateRange;
@@ -263,7 +279,7 @@ export default function Dashboard() {
       const endDate = end ? new Date(`${end}T23:59:59.999Z`) : null;
       
       dataToFilter = dataToFilter.filter(record => {
-        const recordDate = parseDate(record[workspaceConfig.dateField]);
+        const recordDate = parseDate(record.Date);
         if (!recordDate) return false;
 
         const isAfterStart = startDate ? recordDate.getTime() >= startDate.getTime() : true;
@@ -274,27 +290,22 @@ export default function Dashboard() {
     }
 
     return dataToFilter;
-  }, [processedData, selectedDuty, dateRange, workspaceConfig]);
+  }, [processedData, selectedDuty, dateRange]);
 
-  const calculateKpis = (data: FinancialRecord[], config: any) => {
-    if (!config || !data) return { income: 0, expenses: 0, netProfit: 0, profitMargin: 0 };
-    
+  const calculateKpis = (data: FinancialRecord[]) => {
     const income = data.reduce((sum, record) => {
-      const mode = record[config.paymentModeField];
-      if (mode?.toLowerCase().includes(config.cashBfIdentifier) || 
-          mode?.toLowerCase().includes(config.cashBalanceIdentifier) ||
-          mode === config.expenseModeIdentifier) {
+      if (record['Mode']?.toLowerCase().includes('cash b/f') || 
+          record['Mode']?.toLowerCase().includes('cash balance') ||
+          record['Mode'] === 'EXP') {
         return sum;
       }
-      return sum + (record[config.incomeField] || 0);
+      return sum + record['Amt. Paid'];
     }, 0);
 
     const expenses = data.reduce((sum, record) => {
-      let expenseAmount = record[config.expenseField] || 0;
-      if (record[config.paymentModeField] === config.expenseModeIdentifier) { 
-        expenseAmount += (record[config.incomeField] || 0); 
-      }
-      expenseAmount += (record[config.workersField] || 0);
+      let expenseAmount = record['Exp.'];
+      if (record['Mode'] === 'EXP') { expenseAmount += record['Amt. Paid']; }
+      expenseAmount += record['Workers'];
       return sum + expenseAmount;
     }, 0);
 
@@ -304,14 +315,13 @@ export default function Dashboard() {
     return { income, expenses, netProfit, profitMargin };
   };
 
-  const kpis = useMemo(() => calculateKpis(filteredData, workspaceConfig), [filteredData, workspaceConfig]);
-  const comparisonKpis = useMemo(() => calculateKpis(processedComparisonData, workspaceConfig), [processedComparisonData, workspaceConfig]);
+  const kpis = useMemo(() => calculateKpis(filteredData), [filteredData]);
+  const comparisonKpis = useMemo(() => calculateKpis(processedComparisonData), [processedComparisonData]);
 
   const availableDuties = useMemo(() => {
-    if (!workspaceConfig || !processedData) return [];
-    const duties = [...new Set(processedData.map(record => record[workspaceConfig.departmentField]))];
+    const duties = [...new Set(processedData.map(record => record.Duty))];
     return duties.filter(duty => duty && String(duty).trim() !== '');
-  }, [processedData, workspaceConfig]);
+  }, [processedData]);
   
   const normalizeDate = (dateStr: string | number): string => {
     if (!dateStr) return 'Unknown Date';
@@ -326,28 +336,23 @@ export default function Dashboard() {
     } catch (error) { return String(dateStr); }
   };
 
-  const calculateTrendData = (data: FinancialRecord[], config: any) => {
-    if (!config || !data) return [];
+  const calculateTrendData = (data: FinancialRecord[]) => {
     const dailyData: Record<string, { income: number; expenses: number }> = {};
     data.forEach(record => {
-      const dateValue = record[config.dateField];
-      if (!dateValue) return;
-      const normalizedDate = normalizeDate(dateValue);
+      if (!record.Date) return;
+      const normalizedDate = normalizeDate(record.Date);
 
       if (!dailyData[normalizedDate]) {
         dailyData[normalizedDate] = { income: 0, expenses: 0 };
       }
-      const mode = record[config.paymentModeField];
-      if (!mode?.toLowerCase().includes(config.cashBfIdentifier) && 
-          !mode?.toLowerCase().includes(config.cashBalanceIdentifier) &&
-          mode !== config.expenseModeIdentifier) {
-        dailyData[normalizedDate].income += (record[config.incomeField] || 0);
+      if (!record['Mode']?.toLowerCase().includes('cash b/f') && 
+          !record['Mode']?.toLowerCase().includes('cash balance') &&
+          record['Mode'] !== 'EXP') {
+        dailyData[normalizedDate].income += record['Amt. Paid'];
       }
-      let expenseAmount = record[config.expenseField] || 0;
-      if (mode === config.expenseModeIdentifier) { 
-        expenseAmount += (record[config.incomeField] || 0); 
-      }
-      expenseAmount += (record[config.workersField] || 0);
+      let expenseAmount = record['Exp.'];
+      if (record['Mode'] === 'EXP') { expenseAmount += record['Amt. Paid']; }
+      expenseAmount += record['Workers'];
       dailyData[normalizedDate].expenses += expenseAmount;
     });
 
@@ -359,14 +364,16 @@ export default function Dashboard() {
     }));
   };
 
-  const trendData = useMemo(() => calculateTrendData(filteredData, workspaceConfig), [filteredData, workspaceConfig]);
-  const comparisonTrendData = useMemo(() => calculateTrendData(processedComparisonData, workspaceConfig), [processedComparisonData, workspaceConfig]);
+  const trendData = useMemo(() => calculateTrendData(filteredData), [filteredData]);
+  const comparisonTrendData = useMemo(() => calculateTrendData(processedComparisonData), [processedComparisonData]);
 
   const mergedTrendData = useMemo<MergedTrendData[]>(() => {
-    if (!trendData) return [];
+    // FIX: Explicitly typing the Map constructor ensures that TypeScript correctly infers the
+    // type of the map's values, preventing them from being treated as 'unknown'. This
+    // resolves subsequent errors when trying to spread or access properties on these values.
     const dataMap = new Map<string, { day: string; income: number; expenses: number; netProfit: number; }>(trendData.map(d => [d.day, d]));
     
-    if (!selectedCompareMonth || !comparisonTrendData) {
+    if (!selectedCompareMonth) {
       return Array.from(dataMap.values()).map(d => ({
         ...d,
         compareIncome: null,
@@ -375,6 +382,8 @@ export default function Dashboard() {
       })).sort((a,b) => Number(a.day) - Number(b.day));
     }
     
+    // FIX: Explicitly typing this Map constructor for the same reason as above, ensuring
+    // correct type inference and preventing property access errors.
     const compareMap = new Map<string, { day: string; income: number; expenses: number; netProfit: number; }>(comparisonTrendData.map(d => [d.day, d]));
     const allDays = Array.from(new Set([...dataMap.keys(), ...compareMap.keys()])).sort((a, b) => Number(a) - Number(b));
 
@@ -405,18 +414,17 @@ export default function Dashboard() {
     return trimmed;
   };
 
-  const calculateIncomeByPayment = (data: FinancialRecord[], config: any) => {
-    if (!config || !data) return [];
+  const calculateIncomeByPayment = (data: FinancialRecord[]) => {
     const paymentData: Record<string, number> = {};
     
     data.forEach(record => {
-      const mode = record[config.paymentModeField];
-      const amount = record[config.incomeField];
+      const mode = record['Mode'];
+      const amount = record['Amt. Paid'];
       
-      if (mode?.toLowerCase().includes(config.cashBfIdentifier) || 
-          mode?.toLowerCase().includes(config.cashBalanceIdentifier) ||
-          mode === config.expenseModeIdentifier ||
-          !amount || amount <= 0) {
+      if (mode?.toLowerCase().includes('cash b/f') || 
+          mode?.toLowerCase().includes('cash balance') ||
+          mode === 'EXP' ||
+          amount <= 0) {
         return;
       }
 
@@ -430,32 +438,38 @@ export default function Dashboard() {
       .sort((a, b) => b.value - a.value);
   }
 
-  const incomeByPayment = useMemo(() => calculateIncomeByPayment(filteredData, workspaceConfig), [filteredData, workspaceConfig]);
-  const comparisonIncomeByPayment = useMemo(() => calculateIncomeByPayment(processedComparisonData, workspaceConfig), [processedComparisonData, workspaceConfig]);
+  const incomeByPayment = useMemo(() => calculateIncomeByPayment(filteredData), [filteredData]);
+  const comparisonIncomeByPayment = useMemo(() => calculateIncomeByPayment(processedComparisonData), [processedComparisonData]);
 
-  const calculateExpensesByCategory = (expenseData: ExpenseCategoryRecord[], duty: string | null, config: any) => {
-    if (!config || !expenseData || expenseData.length === 0) return [];
+  const calculateExpensesByCategory = (expenseData: ExpenseCategoryRecord[], duty: string | null) => {
+    if (expenseData.length === 0) return [];
       
     const categoryTotals: Record<string, number> = {};
-    const excludedColumns = [config.expenseCategoryDateField, config.expenseCategoryDepartmentField, config.expenseCategoryPurposeField, 's/n'].map(c => c.toLowerCase());
+    // Define a list of metadata columns to ignore, case-insensitively
+    const excludedColumns = ['date', 'duty', 'purpose', 's/n'];
 
     expenseData.forEach(record => {
-      const recordDuty = record[config.expenseCategoryDepartmentField];
-      if (duty && recordDuty && recordDuty.trim().toLowerCase() !== duty.trim().toLowerCase()) {
+      // Apply the department (duty) filter if one is selected
+      if (duty && record.DUTY && record.DUTY.trim().toLowerCase() !== duty.trim().toLowerCase()) {
         return;
       }
       
+      // Iterate over all columns (keys) in the current row (record)
       for (const key in record) {
+        // Ensure the key is a property of the object itself
         if (Object.prototype.hasOwnProperty.call(record, key)) {
           const trimmedKey = key.trim();
           
+          // If the column is not in our exclusion list, treat it as a dynamic expense category
           if (!excludedColumns.includes(trimmedKey.toLowerCase())) {
             const value = Number(record[key]) || 0;
             
             if (value > 0) {
+              // Initialize the category total if it's the first time we've seen it
               if (!categoryTotals[trimmedKey]) {
                 categoryTotals[trimmedKey] = 0;
               }
+              // Add the value to the total for this category
               categoryTotals[trimmedKey] += value;
             }
           }
@@ -463,49 +477,49 @@ export default function Dashboard() {
       }
     });
 
+    // Convert the aggregated totals into the format required by the chart
     return Object.entries(categoryTotals)
       .map(([name, value]) => ({ name, value }))
-      .filter(item => item.value > 0)
-      .sort((a, b) => b.value - a.value);
+      .filter(item => item.value > 0) // Only include categories with a total value > 0
+      .sort((a, b) => b.value - a.value); // Sort for consistent chart display
   }
 
-  const expensesByCategory = useMemo(() => calculateExpensesByCategory(currentExpenseData, selectedDuty, workspaceConfig), [currentExpenseData, selectedDuty, workspaceConfig]);
-  const comparisonExpensesByCategory = useMemo(() => calculateExpensesByCategory(comparisonExpenseCategories, selectedDuty, workspaceConfig), [comparisonExpenseCategories, selectedDuty, workspaceConfig]);
+  const expensesByCategory = useMemo(() => calculateExpensesByCategory(currentExpenseData, selectedDuty), [currentExpenseData, selectedDuty]);
+  const comparisonExpensesByCategory = useMemo(() => calculateExpensesByCategory(comparisonExpenseCategories, selectedDuty), [comparisonExpenseCategories, selectedDuty]);
 
   const accountsReceivable = useMemo(() => {
-    if (!workspaceConfig || !filteredData) return [];
     return filteredData
-      .filter(record => record[workspaceConfig.balanceField] > 0)
+      .filter(record => record['To Balance'] > 0)
       .map(record => ({
-        name: record[workspaceConfig.nameField] || 'Unknown Patient',
-        service: record[workspaceConfig.purposeField] || 'Service Not Specified',
-        amount: record[workspaceConfig.balanceField],
-        date: record[workspaceConfig.dateField],
+        name: record.Name || 'Unknown Patient',
+        service: record.Purpose || 'Service Not Specified',
+        amount: record['To Balance'],
+        date: record.Date,
       }))
       .sort((a, b) => b.amount - a.amount);
-  }, [filteredData, workspaceConfig]);
+  }, [filteredData]);
 
   const comparisonAccountsReceivable = useMemo(() => {
-    if (!selectedCompareMonth || !workspaceConfig || !processedComparisonData) return [];
+    if (!selectedCompareMonth) return [];
     return processedComparisonData
-      .filter(record => record[workspaceConfig.balanceField] > 0)
+      .filter(record => record['To Balance'] > 0)
       .map(record => ({
-        name: record[workspaceConfig.nameField] || 'Unknown Patient',
-        service: record[workspaceConfig.purposeField] || 'Service Not Specified',
-        amount: record[workspaceConfig.balanceField],
-        date: record[workspaceConfig.dateField],
+        name: record.Name || 'Unknown Patient',
+        service: record.Purpose || 'Service Not Specified',
+        amount: record['To Balance'],
+        date: record.Date,
       }))
       .sort((a, b) => b.amount - a.amount);
-  }, [processedComparisonData, selectedCompareMonth, workspaceConfig]);
+  }, [processedComparisonData, selectedCompareMonth]);
+
 
   const totalReceivables = useMemo(() => {
-    if (!accountsReceivable) return 0;
     return accountsReceivable.reduce((sum, item) => sum + item.amount, 0);
   }, [accountsReceivable]);
 
   const financialSummary = useMemo(() => {
     const generateSingleMonthSummary = (monthLabel: string, kpisData: any, incomeData: any[], expenseData: any[], arData: any[], totalAr: number) => {
-        let summary = `\nFinancial Report Summary for ${monthLabel === 'DefaultMonth' ? 'the selected period' : monthLabel}:\n`;
+        let summary = `\nHospital Financial Report Summary for ${monthLabel === 'DefaultMonth' ? 'the selected period' : monthLabel}:\n`;
         if (selectedDuty) {
             summary += `Data is filtered for the ${selectedDuty} department.\n\n`;
         }
@@ -536,8 +550,6 @@ export default function Dashboard() {
         return summary;
     };
 
-    if (!kpis || !incomeByPayment || !expensesByCategory || !accountsReceivable) return "Analyzing data...";
-
     if (selectedCompareMonth && comparisonKpis) {
         let summary = `This is a comparative financial analysis between ${selectedMonth} and ${selectedCompareMonth}.\n\n`;
         
@@ -556,13 +568,13 @@ export default function Dashboard() {
         summary += `\n\n=== Detailed Report for ${selectedMonth} ===`;
         summary += generateSingleMonthSummary(selectedMonth, kpis, incomeByPayment, expensesByCategory, accountsReceivable, totalReceivables);
 
-        const totalComparisonReceivables = (comparisonAccountsReceivable || []).reduce((sum: number, item: any) => sum + item.amount, 0);
+        const totalComparisonReceivables = comparisonAccountsReceivable.reduce((sum, item) => sum + item.amount, 0);
         summary += `\n\n=== Detailed Report for ${selectedCompareMonth} ===`;
-        summary += generateSingleMonthSummary(selectedCompareMonth, comparisonKpis, comparisonIncomeByPayment, comparisonExpensesByCategory, comparisonAccountsReceivable || [], totalComparisonReceivables);
+        summary += generateSingleMonthSummary(selectedCompareMonth, comparisonKpis, comparisonIncomeByPayment, comparisonExpensesByCategory, comparisonAccountsReceivable, totalComparisonReceivables);
 
         return summary;
     } else {
-        return generateSingleMonthSummary(selectedMonth, kpis, incomeByPayment, expensesByCategory, accountsReceivable, totalReceivables).substring(1);
+        return generateSingleMonthSummary(selectedMonth, kpis, incomeByPayment, expensesByCategory, accountsReceivable, totalReceivables).substring(1); // Remove leading newline
     }
   }, [
     kpis, incomeByPayment, expensesByCategory, accountsReceivable, totalReceivables, selectedDuty, selectedMonth,
@@ -572,7 +584,6 @@ export default function Dashboard() {
 
 
   const handleSegmentClick = (type: 'payment' | 'expense', segment: string | null, monthContext: 'primary' | 'compare') => {
-    if (!workspaceConfig) return;
     setActiveSection(type);
     setSidebarOpen(true);
     setSelectedSegment(segment);
@@ -584,7 +595,7 @@ export default function Dashboard() {
     if (type === 'expense' && segment) {
       const matchingRecords: ExpenseTransactionRecord[] = [];
       expenseCategoriesToFilter.forEach(record => {
-        if (selectedDuty && record[workspaceConfig.expenseCategoryDepartmentField] !== selectedDuty) return;
+        if (selectedDuty && record.DUTY !== selectedDuty) return;
         
         let expenseAmount = 0;
         if (segment === 'Miscellaneous Expense') {
@@ -600,13 +611,9 @@ export default function Dashboard() {
         
         if (expenseAmount > 0) {
           matchingRecords.push({
-            Date: record[workspaceConfig.expenseCategoryDateField] || '', 
-            Purpose: record[workspaceConfig.expenseCategoryPurposeField] || 'Expense Transaction',
-            Category: segment, 
-            ExpenseAmount: expenseAmount, 
-            'Mode': workspaceConfig.expenseModeIdentifier,
-            Duty: record[workspaceConfig.expenseCategoryDepartmentField] || '', 
-            Names: ''
+            Date: record.Date || '', Purpose: record.Purpose || 'Expense Transaction',
+            Category: segment, ExpenseAmount: expenseAmount, 'Mode': 'EXP',
+            Duty: record.DUTY || '', Names: ''
           });
         }
       });
@@ -615,9 +622,9 @@ export default function Dashboard() {
     } else if (type === 'payment' && segment) {
       const normalizedSegment = normalizePaymentMethod(segment);
       const matchingRecords = dataToFilter.filter(record => {
-        const mode = record[workspaceConfig.paymentModeField];
-        const amount = record[workspaceConfig.incomeField];
-        if (mode?.toLowerCase().includes(workspaceConfig.cashBfIdentifier) || mode?.toLowerCase().includes(workspaceConfig.cashBalanceIdentifier) || mode === workspaceConfig.expenseModeIdentifier || !amount || amount <= 0) {
+        const mode = record['Mode'];
+        const amount = record['Amt. Paid'];
+        if (mode?.toLowerCase().includes('cash b/f') || mode?.toLowerCase().includes('cash balance') || mode === 'EXP' || amount <= 0) {
           return false;
         }
         return normalizePaymentMethod(mode) === normalizedSegment;
@@ -630,11 +637,38 @@ export default function Dashboard() {
   
   const handleSignOut = async () => {
     try {
+      // FIX: Switched to Firebase v8 compatibility method `auth.signOut`.
       await auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
+
+  if (!monthlyData) {
+    return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative">
+        <div className="absolute top-6 right-6">
+          <Button 
+            onClick={handleSignOut} 
+            className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-colors flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
+        <div className="text-center mb-8">
+            <div className="inline-block bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 p-3 rounded-2xl mb-4">
+              <Activity className="h-10 w-10 text-white" />
+            </div>
+            <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
+                Miracle Analytics
+            </h1>
+            <p className="text-lg text-blue-200">Financial Intelligence Dashboard</p>
+        </div>
+        <FileUpload onDataUploaded={handleDataUpload} />
+      </div>
+    );
+  }
 
   const selectedMonthLabel = selectedMonth === 'DefaultMonth' ? 'Current Period' : selectedMonth;
   const compareMonthLabel = selectedCompareMonth === 'DefaultMonth' ? 'Previous Period' : selectedCompareMonth;
@@ -650,12 +684,12 @@ export default function Dashboard() {
             <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 mt-2">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-purple-500 dark:text-purple-400" />
-                <span>{monthlyData ? filteredData.length : 0} Records</span>
+                <span>{filteredData.length} Records</span>
               </div>
               <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700"></div>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-purple-500 dark:text-purple-400" />
-                <span>{monthlyData ? `${selectedMonthLabel} Analysis` : 'No Data Loaded'}</span>
+                <span>{selectedMonthLabel} Analysis</span>
               </div>
             </div>
           </div>
@@ -697,82 +731,64 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {!monthlyData ? (
-           <div className="flex flex-col items-center justify-center text-center py-20 px-6 bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl">
-              <FileSpreadsheet className="h-16 w-16 text-purple-400 mb-6"/>
-              <h2 className="text-3xl font-bold text-black dark:text-white mb-2">Welcome to Your Dashboard</h2>
-              <p className="text-zinc-600 dark:text-zinc-400 max-w-lg mb-8">
-                To get started, please upload your financial spreadsheet. Your insights are just a click away.
-              </p>
-              <Button 
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-lg px-8 py-3"
-              >
-                  Upload Your First File
-              </Button>
-           </div>
-        ) : (
-          <>
-            <div className="bg-white/50 dark:bg-black/50 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 mb-8 relative z-20">
-                <DashboardFilters 
-                    selectedDuty={selectedDuty}
-                    onDutyChange={setSelectedDuty}
-                    availableDuties={availableDuties}
-                    dateRange={dateRange}
-                    onDateChange={setDateRange}
-                    selectedMonth={selectedMonth}
-                    onMonthChange={handleMonthChange}
-                    availableMonths={availableMonths}
-                    selectedCompareMonth={selectedCompareMonth}
-                    onCompareMonthChange={setSelectedCompareMonth}
-                />
+        <div className="bg-white/50 dark:bg-black/50 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 mb-8 relative z-20">
+            <DashboardFilters 
+                selectedDuty={selectedDuty}
+                onDutyChange={setSelectedDuty}
+                availableDuties={availableDuties}
+                dateRange={dateRange}
+                onDateChange={setDateRange}
+                selectedMonth={selectedMonth}
+                onMonthChange={handleMonthChange}
+                availableMonths={availableMonths}
+                selectedCompareMonth={selectedCompareMonth}
+                onCompareMonthChange={setSelectedCompareMonth}
+            />
+        </div>
+
+        <main className="space-y-8">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <KPICard title="Total Income" value={kpis.income} type="income" compareValue={comparisonKpis?.income} compareLabel={compareMonthLabel} />
+            <KPICard title="Total Expenses" value={kpis.expenses} type="expense" compareValue={comparisonKpis?.expenses} compareLabel={compareMonthLabel} />
+            <KPICard title="Net Profit" value={kpis.netProfit} type="profit" compareValue={comparisonKpis?.netProfit} compareLabel={compareMonthLabel} />
+            <KPICard title="Profit Margin" value={kpis.profitMargin} type="margin" compareValue={comparisonKpis?.profitMargin} compareLabel={compareMonthLabel} />
+            <KPICard title="Total A/R" value={totalReceivables} type="receivables" count={accountsReceivable.length} />
+          </section>
+
+          <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
+            <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Financial Performance Trends</h2>
+            <TrendChart data={mergedTrendData} compareLabel={compareMonthLabel} />
+          </section>
+
+          <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-1">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><PieChartIcon className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Revenue by Payment Mode</h2>
+                    <Button onClick={() => handleSegmentClick('payment', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
+                </div>
+              <PieChartComponent title="Revenue by Payment Mode" data={incomeByPayment} onSegmentClick={(segment) => handleSegmentClick('payment', segment, 'primary')} />
             </div>
+            
+            <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-2">
+              <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><Filter className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Accounts Receivable</h2>
+              <BarChartComponent 
+                title="Accounts Receivable by Patient" 
+                data={accountsReceivable} 
+                compareData={comparisonAccountsReceivable} 
+                primaryLabel={selectedMonthLabel}
+                compareLabel={compareMonthLabel}
+              />
+            </div>
+          </section>
 
-            <main className="space-y-8">
-              <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <KPICard title="Total Income" value={kpis.income} type="income" compareValue={comparisonKpis?.income} compareLabel={compareMonthLabel} />
-                <KPICard title="Total Expenses" value={kpis.expenses} type="expense" compareValue={comparisonKpis?.expenses} compareLabel={compareMonthLabel} />
-                <KPICard title="Net Profit" value={kpis.netProfit} type="profit" compareValue={comparisonKpis?.netProfit} compareLabel={compareMonthLabel} />
-                <KPICard title="Profit Margin" value={kpis.profitMargin} type="margin" compareValue={comparisonKpis?.profitMargin} compareLabel={compareMonthLabel} />
-                <KPICard title="Total A/R" value={totalReceivables} type="receivables" count={accountsReceivable.length} />
-              </section>
-
-              <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
-                <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><TrendingUp className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Financial Performance Trends</h2>
-                <TrendChart data={mergedTrendData} compareLabel={compareMonthLabel} />
-              </section>
-
-              <section className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-1">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><PieChartIcon className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Revenue by Payment Mode</h2>
-                        <Button onClick={() => handleSegmentClick('payment', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
-                    </div>
-                  <PieChartComponent title="Revenue by Payment Mode" data={incomeByPayment} onSegmentClick={(segment) => handleSegmentClick('payment', segment, 'primary')} />
-                </div>
-                
-                <div className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 xl:col-span-2">
-                  <h2 className="text-2xl font-bold text-black dark:text-white mb-4 flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><Filter className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Accounts Receivable</h2>
-                  <BarChartComponent 
-                    title="Accounts Receivable by Patient" 
-                    data={accountsReceivable} 
-                    compareData={comparisonAccountsReceivable} 
-                    primaryLabel={selectedMonthLabel}
-                    compareLabel={compareMonthLabel}
-                  />
-                </div>
-              </section>
-
-               <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><BarChart3 className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Expense Distribution</h2>
-                    <Button onClick={() => handleSegmentClick('expense', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
-                  </div>
-                <PieChartComponent title="Expense Distribution" data={expensesByCategory} onSegmentClick={(segment) => handleSegmentClick('expense', segment, 'primary')} />
-              </section>
-            </main>
-          </>
-        )}
+           <section className="bg-white dark:bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-black dark:text-white flex items-center gap-3"><div className="p-2 bg-gray-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800"><BarChart3 className="h-5 w-5 text-purple-500 dark:text-purple-400" /></div>Expense Distribution</h2>
+                <Button onClick={() => handleSegmentClick('expense', null, 'primary')} className="bg-transparent text-purple-500 dark:text-purple-300 hover:text-black dark:hover:text-white hover:bg-purple-500/10 text-xs px-3 py-1 h-auto">View Analysis</Button>
+              </div>
+            <PieChartComponent title="Expense Distribution" data={expensesByCategory} onSegmentClick={(segment) => handleSegmentClick('expense', segment, 'primary')} />
+          </section>
+        </main>
 
         <footer className="text-center pt-12 text-sm text-zinc-600 dark:text-zinc-500">
           <p>

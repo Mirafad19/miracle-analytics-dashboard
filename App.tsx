@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import LoginPage from './components/LoginPage';
 import Dashboard from './Dashboard';
@@ -6,35 +7,38 @@ import { Spinner } from './components/Icons';
 import { ThemeProvider } from './ThemeContext';
 import { CurrencyProvider } from './CurrencyContext';
 import LandingPage from './components/LandingPage';
-import DataMapping from './components/DataMapping';
 
 const AppContent = () => {
-  const { currentUser, isLoading, workspaceConfig } = useAuth();
-  const [showLoginPage, setShowLoginPage] = useState(false);
+  const { currentUser, loading } = useAuth();
+  // Initialize based on whether a user is already logged in.
+  // If no user, default to showing the landing page.
+  const [showLanding, setShowLanding] = useState(!currentUser);
 
-  // This is the single, unified loading screen. It shows until both auth and config state are resolved.
-  if (isLoading) {
+  useEffect(() => {
+    // This effect runs when the authentication state changes.
+    // If the user logs out (currentUser becomes null), we ensure
+    // the landing page is shown next.
+    if (!currentUser) {
+      setShowLanding(true);
+    }
+  }, [currentUser]);
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-4">
         <Spinner className="h-16 w-16 text-purple-400 animate-spin" />
-        <p className="text-lg text-zinc-300">Initializing Miracle Analytics...</p>
+        <p className="text-lg text-zinc-300">Loading Dashboard...</p>
       </div>
     );
   }
 
-  // After loading, route based on the resolved state.
   if (currentUser) {
-    // If a user is logged in, they either see their dashboard or the one-time mapping setup.
-    // The workspaceConfig is guaranteed to be resolved (either as an object or null) at this point.
-    return workspaceConfig ? <Dashboard /> : <DataMapping />;
+    return <Dashboard />;
   }
 
-  // If no user is logged in, show either the landing page or the login page.
-  if (showLoginPage) {
-    return <LoginPage onBackToHome={() => setShowLoginPage(false)} />;
-  }
-  
-  return <LandingPage onLoginClick={() => setShowLoginPage(true)} />;
+  return showLanding 
+    ? <LandingPage onLoginClick={() => setShowLanding(false)} /> 
+    : <LoginPage onBackToHome={() => setShowLanding(true)} />;
 };
 
 export default function App() {
