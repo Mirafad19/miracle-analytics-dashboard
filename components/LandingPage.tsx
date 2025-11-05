@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import VideoPlayer from './VideoPlayer.tsx';
-import { Activity, BarChart3, Bot, Upload, Mail, ChevronDown, Linkedin, Facebook, TwitterX, Instagram } from './Icons.tsx';
+import { Logo } from './Logo.tsx';
+import { BarChart3, Bot, Upload, Mail, ChevronDown, Linkedin, Facebook, TwitterX, Instagram, CheckCircle } from './Icons.tsx';
 import { Button } from './ui/Button.tsx';
 import { CreatorModal } from './CreatorModal.tsx';
 
@@ -48,8 +49,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real application, you would handle form submission here (e.g., send data to an API).
-    // For now, we'll just log it. A mailto link is provided as a fallback.
     alert("Thank you for your message! For this demo, please use the direct email link. Your form data has been logged to the console.");
     const formData = new FormData(e.target as HTMLFormElement);
     console.log(Object.fromEntries(formData.entries()));
@@ -58,12 +57,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#101010] text-black dark:text-white font-sans">
       <header className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-10">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-            <Activity className="h-6 w-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Miracle Analytics</h1>
-        </div>
+        <Logo />
         <Button
           onClick={onLoginClick}
           className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-colors"
@@ -75,7 +69,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       <main>
         <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center text-center p-6 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-700 to-black opacity-90 z-0"></div>
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%2D%3E')] opacity-50"></div>
           <div className="relative z-10 animate-fade-in space-y-6">
             <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tighter">
               From Raw Data to Actionable Insights.
@@ -121,12 +115,85 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </div>
         </section>
 
+        <section id="pricing" className="py-20 px-6 bg-zinc-100 dark:bg-black text-center">
+            <h3 className="text-3xl font-bold mb-4 text-black dark:text-white">Miracle Pricing Tiers</h3>
+            <p className="max-w-2xl mx-auto text-zinc-600 dark:text-zinc-400 mb-12">
+                All plans include a dedicated onboarding specialist, secure access for your team, and powerful AI-driven insights.
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto text-left">
+                {/* Starter Tier */}
+                <div className="bg-white dark:bg-zinc-950 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-6 flex flex-col">
+                    <h4 className="text-2xl font-bold text-black dark:text-white">Starter</h4>
+                    <p className="text-zinc-600 dark:text-zinc-400 flex-grow">For <span className="font-semibold text-black dark:text-white">startups & small businesses</span> under 30 people.</p>
+                    <ul className="space-y-3 text-zinc-700 dark:text-zinc-300 flex-grow">
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Up to 10 users included</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Role-based access control</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Standard dashboard templates</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Import tools (Excel, CSV)</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Email support (2 business days)</li>
+                    </ul>
+                    <Button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="w-full bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700">Get Started</Button>
+                </div>
+                {/* Pro Tier (Most Popular) */}
+                <div className="bg-white dark:bg-zinc-950 p-8 rounded-2xl border-2 border-purple-500 space-y-6 relative flex flex-col shadow-2xl shadow-purple-500/20">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold">Most Popular</div>
+                    <h4 className="text-2xl font-bold text-black dark:text-white">Pro</h4>
+                    <p className="text-zinc-600 dark:text-zinc-400 flex-grow">For <span className="font-semibold text-black dark:text-white">growing teams</span> with complex needs.</p>
+                    <ul className="space-y-3 text-zinc-700 dark:text-zinc-300 flex-grow">
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> <span className="font-semibold">All features in Starter</span></li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Support for 3+ data integrations</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Custom dashboards for your team</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Weekly check-ins with data experts</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Premium support (24-hour response)</li>
+                    </ul>
+                    <Button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="w-full bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200">Get Started</Button>
+                </div>
+                {/* Enterprise Tier */}
+                <div className="bg-white dark:bg-zinc-950 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-6 flex flex-col">
+                    <h4 className="text-2xl font-bold text-black dark:text-white">Enterprise</h4>
+                    <p className="text-zinc-600 dark:text-zinc-400 flex-grow">Works best for <span className="font-semibold text-black dark:text-white">large organizations & hospitals.</span></p>
+                    <ul className="space-y-3 text-zinc-700 dark:text-zinc-300 flex-grow">
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> <span className="font-semibold">All features in Pro</span></li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Unlimited users and studies</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Dedicated premium support</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> Advanced user roles & security</li>
+                        <li className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-emerald-500" /> 1:1 strategic check-ins</li>
+                    </ul>
+                    <Button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="w-full bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700">Contact Us</Button>
+                </div>
+            </div>
+        </section>
+
+        <section className="py-20 px-6">
+            <h3 className="text-center text-xl font-semibold text-zinc-600 dark:text-zinc-400 mb-12">Trusted by Leading Healthcare & Finance Companies</h3>
+            <div className="max-w-5xl mx-auto flex justify-around items-center gap-8 flex-wrap grayscale opacity-60 dark:opacity-40">
+                <div className="text-2xl font-bold tracking-widest">INNOVATECH</div>
+                <div className="text-2xl font-bold tracking-widest">VISTAGEN</div>
+                <div className="text-2xl font-bold tracking-widest">AXIAL</div>
+                <div className="text-2xl font-bold tracking-widest">QUANTUM</div>
+                <div className="text-2xl font-bold tracking-widest">NEXUS</div>
+            </div>
+        </section>
+
         <section className="py-20 px-6 bg-zinc-100 dark:bg-black">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-zinc-500 dark:text-zinc-400 mb-4 font-semibold">TESTIMONIALS</p>
+            <blockquote className="text-2xl md:text-3xl font-medium text-black dark:text-white leading-snug">
+              "Miracle's dashboard has become an invaluable tool for our operations team. We can integrate real-time metrics and alerts into a single platform which allows us to consolidate visibility and accelerate our decision-making capability."
+            </blockquote>
+            <div className="mt-8">
+              <p className="font-bold text-lg text-black dark:text-white">Jane Doe, COO</p>
+              <p className="text-zinc-600 dark:text-zinc-400">Odyssey Therapeutics</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-20 px-6">
+          <div className="max-w-4xl mx-auto">
             <h3 className="text-3xl font-bold text-center mb-12 text-black dark:text-white">Frequently Asked Questions</h3>
             <div className="space-y-4">
               {faqData.map((faq, index) => (
-                <FaqItem
+                <FaqItem 
                   key={index}
                   question={faq.question}
                   answer={faq.answer}
@@ -138,7 +205,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           </div>
         </section>
 
-        <section className="py-20 px-6">
+        <section id="contact" className="py-20 px-6 bg-zinc-100 dark:bg-black">
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-center">
             <div className="space-y-6 text-zinc-700 dark:text-zinc-300">
                 <h3 className="text-3xl font-bold text-black dark:text-white">Get in Touch</h3>

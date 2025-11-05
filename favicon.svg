@@ -5,5 +5,7 @@
       <stop offset="100%" stop-color="#EC4899"/>
     </linearGradient>
   </defs>
-  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke="url(#iconGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="4" y="10" width="4" height="8" rx="1" fill="url(#iconGradient)"/>
+  <rect x="10" y="4" width="4" height="14" rx="1" fill="url(#iconGradient)"/>
+  <rect x="16" y="14" width="4" height="4" rx="1" fill="url(#iconGradient)"/>
 </svg>

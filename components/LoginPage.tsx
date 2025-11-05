@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { auth } from '../firebaseConfig';
 // FIX: Removed unused v9 import to align with v8 compatibility layer.
 // import { signInWithEmailAndPassword } from 'firebase/auth';
-import { Activity, AlertCircle } from './Icons';
+import { Logo } from './Logo';
+import { AlertCircle } from './Icons';
 import { Button } from './ui/Button';
 
 interface LoginPageProps {
@@ -38,14 +39,9 @@ export default function LoginPage({ onBackToHome }: LoginPageProps) {
     <div className="min-h-screen bg-[#101010] text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto">
         <div className="text-center mb-10">
-          <div className="flex items-center justify-center mb-6">
-            <div className="relative">
-              <Activity className="relative h-14 w-14 text-white" />
+            <div className="flex justify-center mb-6">
+                <Logo />
             </div>
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
-            Miracle Analytics
-          </h1>
           <p className="text-lg text-zinc-400">Secure Portal Access</p>
         </div>
 
