@@ -45,35 +45,48 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const reloadConfig = () => setReloadTrigger(prev => prev + 1);
 
+  // Effect 1: Handle User Authentication State
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
       setCurrentUser(user);
       setAuthLoading(false);
-
-      if (user) {
-        setConfigLoading(true);
-        try {
-          const mappingDoc = await db.collection('mappings').doc(user.uid).get();
-          if (mappingDoc.exists) {
-            setWorkspaceConfig(mappingDoc.data() as WorkspaceConfig);
-          } else {
-            // No mapping found for this user. They will be directed to the mapping screen.
-            setWorkspaceConfig(null);
-          }
-        } catch (error) {
-          console.error("Error fetching user mapping config:", error);
-          setWorkspaceConfig(null); // Force to mapping screen on error
-        } finally {
-          setConfigLoading(false);
-        }
-      } else {
-        setWorkspaceConfig(null);
-        setConfigLoading(false);
-      }
     });
+    return unsubscribe; // Cleanup listener on unmount
+  }, []); // Run only once on component mount
 
-    return unsubscribe;
-  }, [reloadTrigger]); // Rerun effect when reload is triggered
+  // Effect 2: Handle Workspace Configuration Loading
+  useEffect(() => {
+    // This effect runs when the user logs in/out, or when a reload is triggered.
+    const fetchConfig = async () => {
+      // Don't do anything if we don't have a user object.
+      if (!currentUser) {
+        setWorkspaceConfig(null);
+        setConfigLoading(false); // No user means no config to load.
+        return;
+      }
+
+      setConfigLoading(true); // Start loading config for the current user.
+      try {
+        const mappingDoc = await db.collection('mappings').doc(currentUser.uid).get();
+        if (mappingDoc.exists) {
+          setWorkspaceConfig(mappingDoc.data() as WorkspaceConfig);
+        } else {
+          // No mapping found, user needs to set it up.
+          setWorkspaceConfig(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user mapping config:", error);
+        setWorkspaceConfig(null); // Force to mapping screen on error
+      } finally {
+        setConfigLoading(false); // Finish loading
+      }
+    };
+    
+    // We only run the fetch logic after the initial authentication check is complete.
+    if (!authLoading) {
+      fetchConfig();
+    }
+  }, [currentUser, reloadTrigger, authLoading]);
 
   const value = {
     currentUser,
