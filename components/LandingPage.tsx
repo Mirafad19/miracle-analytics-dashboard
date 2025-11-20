@@ -1,9 +1,12 @@
 
 import React, { useState } from 'react';
 import VideoPlayer from './VideoPlayer.tsx';
-import { Activity, BarChart3, Bot, Upload, Mail, ChevronDown, Linkedin, Facebook, TwitterX, Instagram } from './Icons.tsx';
+import { Activity, BarChart3, Bot, Upload, Mail, ChevronDown, Linkedin, Facebook, TwitterX, Instagram, Home, Users } from './Icons.tsx';
 import { Button } from './ui/Button.tsx';
 import { CreatorModal } from './CreatorModal.tsx';
+import { AnimatedHero } from './ui/animated-hero.tsx';
+import { TestimonialsSection } from './ui/testimonials-with-marquee.tsx';
+import { FloatingNav } from './ui/floating-navbar.tsx';
 
 interface LandingPageProps {
   onLoginClick: () => void;
@@ -28,6 +31,41 @@ const faqData = [
   }
 ];
 
+const testimonials = [
+  {
+    author: {
+      name: "Sarah Jenkins",
+      handle: "CFO @ HealthCare Plus",
+      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face"
+    },
+    text: "Miracle Analytics completely transformed our monthly reporting. What used to take 3 days now takes 3 minutes.",
+  },
+  {
+    author: {
+      name: "David Okonkwo",
+      handle: "Director @ Lagos Medical",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+    },
+    text: "The AI insights are terrifyingly accurate. It found a 15% leakage in our expenses that we missed for years.",
+  },
+  {
+    author: {
+      name: "Elena Rodriguez",
+      handle: "Admin @ City Clinics",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face"
+    },
+    text: "Finally, a dashboard that speaks my language. I don't need to be a data scientist to understand our profits.",
+  },
+  {
+    author: {
+      name: "James Carter",
+      handle: "Founder @ Carter Logistics",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face"
+    },
+    text: "The secure file upload and instant visualization is a game changer for small business owners.",
+  }
+];
+
 const FaqItem: React.FC<{ question: string; answer: string; isOpen: boolean; onClick: () => void; }> = ({ question, answer, isOpen, onClick }) => {
   return (
     <div className="border-b border-zinc-200 dark:border-zinc-800">
@@ -48,15 +86,23 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real application, you would handle form submission here (e.g., send data to an API).
-    // For now, we'll just log it. A mailto link is provided as a fallback.
     alert("Thank you for your message! For this demo, please use the direct email link. Your form data has been logged to the console.");
     const formData = new FormData(e.target as HTMLFormElement);
     console.log(Object.fromEntries(formData.entries()));
   };
 
+  const navItems = [
+    { name: "Home", link: "#home", icon: <Home className="h-4 w-4 text-neutral-500 dark:text-white" /> },
+    { name: "Features", link: "#features", icon: <BarChart3 className="h-4 w-4 text-neutral-500 dark:text-white" /> },
+    { name: "Testimonials", link: "#testimonials", icon: <Users className="h-4 w-4 text-neutral-500 dark:text-white" /> },
+    { name: "Contact", link: "#contact", icon: <Mail className="h-4 w-4 text-neutral-500 dark:text-white" /> },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#101010] text-black dark:text-white font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#101010] text-black dark:text-white font-sans scroll-smooth">
+      {/* Floating Navigation with Sign In Button */}
+      <FloatingNav navItems={navItems} onLoginClick={onLoginClick} />
+      
       <header className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-10">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
@@ -64,34 +110,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Miracle Analytics</h1>
         </div>
-        <Button
-          onClick={onLoginClick}
-          className="bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-colors"
-        >
-          Sign In
-        </Button>
       </header>
 
       <main>
-        <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center text-center p-6 overflow-hidden">
+        <section id="home" className="relative h-[70vh] min-h-[500px] flex items-center justify-center text-center p-6 overflow-hidden scroll-mt-28">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-700 to-black opacity-90 z-0"></div>
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
-          <div className="relative z-10 animate-fade-in space-y-6">
-            <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tighter">
-              From Raw Data to Actionable Insights.
-              <span className="block text-yellow-300 [text-shadow:0_0_15px_rgba(234,179,8,0.7)] mt-2">Instantly.</span>
-            </h2>
-            <p className="max-w-3xl mx-auto text-lg md:text-xl text-indigo-100">
-              Watch how our AI-driven dashboard instantly transforms complex financial spreadsheets into clear, strategic intelligence for your organization.
-            </p>
+          <div className="relative z-10 animate-fade-in space-y-6 w-full">
+            <AnimatedHero />
           </div>
         </section>
 
-        <section className="relative -mt-32 z-20 p-6">
+        <section id="demo" className="relative -mt-32 z-20 p-6 scroll-mt-28">
           <VideoPlayer />
         </section>
         
-        <section className="py-20 px-6 text-center">
+        <section id="features" className="py-20 px-6 text-center scroll-mt-28">
             <h3 className="text-3xl font-bold mb-4 text-black dark:text-white">A Smarter Workflow in 3 Simple Steps</h3>
             <p className="max-w-2xl mx-auto text-zinc-600 dark:text-zinc-400 mb-12">
                 Go from complex spreadsheets to actionable insights faster than ever before.
@@ -121,7 +155,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
             </div>
         </section>
 
-        <section className="py-20 px-6 bg-zinc-100 dark:bg-black">
+        <section id="faq" className="py-20 px-6 bg-zinc-100 dark:bg-black scroll-mt-28">
           <div className="max-w-3xl mx-auto">
             <h3 className="text-3xl font-bold text-center mb-12 text-black dark:text-white">Frequently Asked Questions</h3>
             <div className="space-y-4">
@@ -138,7 +172,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
           </div>
         </section>
 
-        <section className="py-20 px-6">
+        <div id="testimonials" className="scroll-mt-28">
+            <TestimonialsSection 
+            title="Trusted by Industry Leaders" 
+            description="See why hospital administrators and business owners rely on Miracle Analytics for their financial clarity."
+            testimonials={testimonials}
+            className="bg-white dark:bg-zinc-950"
+            />
+        </div>
+
+        <section id="contact" className="py-20 px-6 scroll-mt-28">
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-center">
             <div className="space-y-6 text-zinc-700 dark:text-zinc-300">
                 <h3 className="text-3xl font-bold text-black dark:text-white">Get in Touch</h3>

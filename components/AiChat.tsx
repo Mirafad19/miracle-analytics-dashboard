@@ -67,19 +67,50 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
     return null;
   }, []);
 
-  const systemInstruction = `You are an 'AI Financial Analyst', an expert AI financial advisor for healthcare institutions. Your tone is professional, insightful, and encouraging. 
-  Analyze the provided financial data context to give clear, actionable advice. Base your entire analysis strictly on the data provided.
-  Do not mention that you are an AI.
-  **FORMATTING RULES:**
-  - Use standard HTML tags for structure: <p> for paragraphs, <strong> for bold, <ul> and <li> for lists.
-  - To highlight key financial insights, wrap them in <span> tags with specific classes:
-    - For POSITIVE insights (e.g., profit increase, cost reduction), use: <span class="insight-positive">text</span>.
-    - For NEGATIVE insights or RISKS (e.g., expense increase, low margin), use: <span class="insight-negative">text</span>.
-  - Start the conversation by greeting the user and offering to analyze their financial data.`;
+  const systemInstruction = `You are a friendly, smart, and sharp Business Partner for a hospital owner. 
+  Your goal is to help the owner make more money and stop losing money.
+  
+  **TONE RULES:**
+  1. **Friendly & Simple:** Talk like a smart human partner, not a robot. Use engaging, clear English. Avoid "corporate" jargon.
+  2. **Direct Answers:** If the user asks a specific question (like "How do I stop theft?"), answer ONLY that question. **Do NOT** provide a general summary of the data unless the user specifically asks for "a summary" or "overview".
+  3. **Practical:** Give specific, actionable advice based on the provided financial data.
+
+  **CRITICAL FORMATTING RULES (Use HTML Tags):**
+  - **NEVER use Markdown** (like **bold** or 1. List).
+  - **ALWAYS use HTML tags** for formatting to ensure it looks good:
+    - Use <p> for paragraphs.
+    - Use <ol> for numbered lists.
+    - Use <ul> for bullet points.
+    - Use <li> for list items.
+    - Use <strong> for emphasis.
+    - Use <br> for line breaks if needed.
+  
+  - **Nested Lists Strategy:**
+    When giving steps, use this structure to ensure they appear on separate lines:
+    <ol>
+      <li><strong>Main Step Name</strong>: Brief explanation.
+        <ol type="a" style="margin-top: 5px; margin-bottom: 10px; margin-left: 20px;">
+           <li>Sub-step a</li>
+           <li>Sub-step b</li>
+        </ol>
+      </li>
+    </ol>
+
+  - **Highlights:** 
+    - Use <span class="text-green-600 dark:text-green-400 font-bold">text</span> for good news (profits, savings).
+    - Use <span class="text-red-500 dark:text-red-400 font-bold">text</span> for bad news (theft risks, high costs).
+
+  **DATA USAGE:**
+  - Use the financial data provided in the context to back up your advice.
+  - Do not list specific steps (like 4 steps) unless necessary. Use as many or as few as the situation requires.
+  `;
 
   useEffect(() => {
     if (isOpen) {
-      setMessages([]); // Reset on open
+      // Only reset messages if it's the very first time or if we want a fresh start. 
+      // For now, we keep history if the user closes/opens, unless you prefer resetting.
+      // The original code reset on open, so we keep that behavior.
+      setMessages([]); 
       setIsLoading(true);
 
       if (error || !ai) {
@@ -90,7 +121,9 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
 
       const sendInitialMessage = async () => {
         try {
-          const initialPrompt = `The user has opened the chat. Please greet them and offer to analyze their financial data. Here is the data for context, but do not show it to the user unless they ask for specific figures: \n\n${financialData}`;
+          // We explicitly tell the AI this is the start of the session.
+          const initialPrompt = `The user has just opened the chat. Greet them warmly and briefly (1 sentence) as their business partner. Do NOT summarize the data yet. Just let them know you are ready to help analyze their business. Use HTML tags for formatting.`;
+          
           const response = await ai.models.generateContentStream({
             model: "gemini-2.5-flash",
             contents: [{ parts: [{ text: initialPrompt }] }],
@@ -114,7 +147,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
 
       sendInitialMessage();
     }
-  }, [isOpen, ai, financialData, systemInstruction, error]);
+  }, [isOpen, ai, systemInstruction, error]); 
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -129,10 +162,11 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
     setMessages(newMessages);
     setInput('');
     setIsLoading(true);
-    setError(null); // Clear previous errors on new submission
+    setError(null); 
 
     try {
-        const fullPrompt = `CONTEXT:\n${financialData}\n\nUSER QUESTION: ${userMessage}`;
+        // We pass the financial data as CONTEXT every time so the model remembers the numbers.
+        const fullPrompt = `FINANCIAL DATA CONTEXT:\n${financialData}\n\nUSER QUESTION: ${userMessage}`;
         
         const response = await ai.models.generateContentStream({
             model: "gemini-2.5-flash",
@@ -173,7 +207,7 @@ export const AiChatModal = ({ isOpen, onClose, financialData }: AiChatModalProps
             <div key={index} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'model' && <div className="w-8 h-8 rounded-full bg-purple-500/10 dark:bg-purple-500/20 flex items-center justify-center flex-shrink-0"><Bot className="h-5 w-5 text-purple-500 dark:text-purple-300" /></div>}
               <div className={`max-w-xl p-4 rounded-2xl ${msg.role === 'user' ? 'bg-blue-500/10 dark:bg-blue-500/20 rounded-br-none text-black dark:text-white' : 'bg-transparent rounded-bl-none text-zinc-800 dark:text-zinc-200'}`}>
-                <div className="prose prose-p:my-2 prose-strong:text-black dark:prose-strong:text-white prose-ul:my-2" dangerouslySetInnerHTML={{ __html: msg.content }} />
+                <div className="prose prose-p:my-2 prose-strong:text-black dark:prose-strong:text-white prose-ul:my-2 prose-ol:list-decimal prose-li:marker:text-zinc-500 dark:prose-li:marker:text-zinc-400" dangerouslySetInnerHTML={{ __html: msg.content }} />
               </div>
             </div>
           ))}
