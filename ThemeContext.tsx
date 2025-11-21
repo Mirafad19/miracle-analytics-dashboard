@@ -16,13 +16,22 @@ interface ThemeProviderProps {
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const storedTheme = window.localStorage.getItem('theme') as Theme | null;
-      if (storedTheme) {
-        return storedTheme;
+    if (typeof window !== 'undefined') {
+      if (window.localStorage) {
+        const storedTheme = window.localStorage.getItem('theme') as Theme | null;
+        if (storedTheme) {
+          return storedTheme;
+        }
+      }
+      // Check system preference
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        return 'light';
       }
     }
-    // Default to dark theme if no preference is stored
+    // Fallback default
     return 'dark';
   });
 
