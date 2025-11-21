@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
 import VideoPlayer from './VideoPlayer.tsx';
-import { Activity, BarChart3, Bot, Upload, Mail, ChevronDown, Linkedin, Facebook, TwitterX, Instagram, Home, Users } from './Icons.tsx';
+import { Activity, BarChart3, Bot, Upload, Mail, ChevronDown, Linkedin, Facebook, TwitterX, Instagram, Home, Users, FileText } from './Icons.tsx';
 import { Button } from './ui/Button.tsx';
 import { CreatorModal } from './CreatorModal.tsx';
 import { AnimatedHero } from './ui/animated-hero.tsx';
 import { TestimonialsSection } from './ui/testimonials-with-marquee.tsx';
 import { FloatingNav } from './ui/floating-navbar.tsx';
+import { Logo } from './Branding.tsx';
 
 interface LandingPageProps {
   onLoginClick: () => void;
@@ -95,6 +96,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
     { name: "Home", link: "#home", icon: <Home className="h-4 w-4 text-neutral-500 dark:text-white" /> },
     { name: "Features", link: "#features", icon: <BarChart3 className="h-4 w-4 text-neutral-500 dark:text-white" /> },
     { name: "Testimonials", link: "#testimonials", icon: <Users className="h-4 w-4 text-neutral-500 dark:text-white" /> },
+    { name: "FAQ", link: "#faq", icon: <FileText className="h-4 w-4 text-neutral-500 dark:text-white" /> },
     { name: "Contact", link: "#contact", icon: <Mail className="h-4 w-4 text-neutral-500 dark:text-white" /> },
   ];
 
@@ -104,12 +106,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
       <FloatingNav navItems={navItems} onLoginClick={onLoginClick} />
       
       <header className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-10">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-            <Activity className="h-6 w-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Miracle Analytics</h1>
-        </div>
+         <Logo textClassName="text-white" iconClassName="text-white" />
       </header>
 
       <main>
