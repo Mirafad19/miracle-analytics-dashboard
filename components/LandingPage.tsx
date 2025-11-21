@@ -102,18 +102,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#101010] text-black dark:text-white font-sans scroll-smooth">
-      {/* Floating Navigation with Sign In Button */}
+      {/* Unified Header (Contains Logo + Nav + Actions) */}
       <FloatingNav navItems={navItems} onLoginClick={onLoginClick} />
       
-      <header className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-10">
-         <Logo textClassName="text-white" iconClassName="text-white" />
-      </header>
-
       <main>
         <section id="home" className="relative h-[70vh] min-h-[500px] flex items-center justify-center text-center p-6 overflow-hidden scroll-mt-28">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-700 to-black opacity-90 z-0"></div>
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
-          <div className="relative z-10 animate-fade-in space-y-6 w-full">
+          <div className="relative z-10 animate-fade-in space-y-6 w-full pt-16">
             <AnimatedHero />
           </div>
         </section>

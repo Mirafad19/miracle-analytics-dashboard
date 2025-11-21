@@ -4,6 +4,7 @@ import { cn } from "../../lib/utils";
 import { Button } from "./Button";
 import { useTheme } from "../../ThemeContext";
 import { Sun, Moon } from "../Icons";
+import { Logo, LogoIcon } from "../Branding";
 
 export const FloatingNav = ({
   navItems,
@@ -22,14 +23,11 @@ export const FloatingNav = ({
   
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
-    
-    // Remove the hash to get the ID
     const targetId = href.replace('#', '');
     const elem = document.getElementById(targetId);
     
     if (elem) {
-      // Calculate position with offset for the navbar
-      const navHeight = 80; // Approximate height of navbar + spacing
+      const navHeight = 80; 
       const elementPosition = elem.getBoundingClientRect().top + window.scrollY;
       const offsetPosition = elementPosition - navHeight;
 
@@ -47,70 +45,70 @@ export const FloatingNav = ({
   return (
     <div
       className={cn(
-        // Layout Container: ABSOLUTE (Scrolls with page), High Z-Index, Flex
-        // Changed from 'fixed' to 'absolute' to prevents overlap on scroll
-        "absolute z-[50] flex items-center gap-2 sm:gap-3",
-        
-        // MOBILE POSITIONING: Top-Right
-        // Allows the Brand Logo (Top-Left) to remain visible
-        "top-4 right-4",
-
-        // DESKTOP POSITIONING: Top-Center
-        "sm:top-6 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto",
-        
+        // UNIFIED HEADER CONTAINER
+        // Absolute positioning ensures it sits on top of the hero background
+        "absolute top-0 left-0 w-full z-50",
+        "flex items-center justify-between",
+        "p-4 sm:p-6",
         className
       )}
     >
-      {/* 
-        DESKTOP ONLY: Navigation Links
-        Simple text, no pill/border/background
-      */}
-      <div className="hidden sm:flex items-center gap-6 mr-4">
+      {/* LEFT: BRANDING */}
+      <div className="flex-shrink-0">
+        {/* Mobile: Icon Only (Prevents overlap) */}
+        <div className="block sm:hidden">
+            <LogoIcon className="h-10 w-10 text-white" />
+        </div>
+        {/* Desktop: Full Logo */}
+        <div className="hidden sm:block">
+            <Logo textClassName="text-white" iconClassName="text-white" />
+        </div>
+      </div>
+
+      {/* CENTER: NAVIGATION LINKS (Desktop Only) */}
+      <div className="hidden lg:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
           {navItems.map((navItem: any, idx: number) => (
           <a
               key={`link=${idx}`}
               href={navItem.link}
               onClick={(e) => handleScroll(e, navItem.link)}
               className={cn(
-              "relative flex items-center justify-center",
-              "text-neutral-200 hover:text-white", // Light text for dark hero bg
-              "text-sm font-medium transition-colors duration-200 cursor-pointer",
+              "text-indigo-100 hover:text-white",
+              "text-sm font-medium transition-colors duration-200 cursor-pointer tracking-wide",
               )}
               title={navItem.name}
           >
-              <span>{navItem.name}</span>
+              {navItem.name}
           </a>
           ))}
       </div>
 
-      {/* 
-        ACTIONS: Theme Toggle & Sign In 
-        These now float independently with their own styling
-      */}
-      
-      {/* Theme Toggle - Glass Bubble to match Hero Section */}
-      <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleTheme}
-          className="rounded-full h-10 w-10 bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg text-white hover:bg-white/20"
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-      >
-          {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-      </Button>
+      {/* RIGHT: ACTIONS (Theme + Sign In) */}
+      <div className="flex items-center gap-3">
+          {/* Theme Toggle - Subtle Glass */}
+          <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-full h-10 w-10 bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20"
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          >
+              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+          </Button>
 
-      {/* Sign In Button - Gradient Pill */}
-      <Button 
-          variant="default" 
-          size="sm" 
-          onClick={onLoginClick} 
-          className={cn(
-          "rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white border-none shadow-lg flex-shrink-0",
-          "px-5 h-10 text-sm font-semibold"
-          )}
-      >
-        Sign In
-      </Button>
+          {/* Sign In Button - High Contrast Pill */}
+          <Button 
+              variant="default" 
+              size="sm" 
+              onClick={onLoginClick} 
+              className={cn(
+              "rounded-full bg-white text-purple-700 hover:bg-indigo-50 border-none shadow-xl",
+              "px-6 h-10 text-sm font-bold tracking-wide"
+              )}
+          >
+            Sign In
+          </Button>
+      </div>
     </div>
   );
 };
