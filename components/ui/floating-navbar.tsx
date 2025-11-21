@@ -4,7 +4,7 @@ import { cn } from "../../lib/utils";
 import { Button } from "./Button";
 import { useTheme } from "../../ThemeContext";
 import { Sun, Moon } from "../Icons";
-import { Logo, LogoIcon } from "../Branding";
+import { Logo } from "../Branding";
 
 export const FloatingNav = ({
   navItems,
@@ -55,14 +55,12 @@ export const FloatingNav = ({
     >
       {/* LEFT: BRANDING */}
       <div className="flex-shrink-0">
-        {/* Mobile: Icon Only (Prevents overlap) */}
-        <div className="block sm:hidden">
-            <LogoIcon className="h-10 w-10 text-white" />
-        </div>
-        {/* Desktop: Full Logo */}
-        <div className="hidden sm:block">
-            <Logo textClassName="text-white" iconClassName="text-white" />
-        </div>
+        {/* Always show full logo, adjusted size for mobile */}
+        <Logo 
+            className="gap-2 sm:gap-3"
+            textClassName="text-white text-sm xs:text-base sm:text-lg"
+            iconClassName="text-white h-8 w-8 sm:h-10 sm:w-10"
+        />
       </div>
 
       {/* CENTER: NAVIGATION LINKS (Desktop Only) */}
@@ -85,25 +83,25 @@ export const FloatingNav = ({
 
       {/* RIGHT: ACTIONS (Theme + Sign In) */}
       <div className="flex items-center gap-3">
-          {/* Theme Toggle - Subtle Glass */}
+          {/* Theme Toggle - Hidden on mobile to save space for Logo */}
           <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className="rounded-full h-10 w-10 bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20"
+              className="hidden sm:inline-flex rounded-full h-10 w-10 bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20"
               title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
           >
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
 
-          {/* Sign In Button - High Contrast Pill */}
+          {/* Sign In Button - Compact on mobile */}
           <Button 
               variant="default" 
               size="sm" 
               onClick={onLoginClick} 
               className={cn(
               "rounded-full bg-white text-purple-700 hover:bg-indigo-50 border-none shadow-xl",
-              "px-6 h-10 text-sm font-bold tracking-wide"
+              "px-4 sm:px-6 h-9 sm:h-10 text-xs sm:text-sm font-bold tracking-wide"
               )}
           >
             Sign In

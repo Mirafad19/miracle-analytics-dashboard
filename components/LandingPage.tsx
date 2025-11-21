@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import VideoPlayer from './VideoPlayer.tsx';
-import { Activity, BarChart3, Bot, Upload, Mail, ChevronDown, Linkedin, Facebook, TwitterX, Instagram, Home, Users, FileText } from './Icons.tsx';
+import { Activity, BarChart3, Bot, Upload, Mail, ChevronDown, Linkedin, Facebook, TwitterX, Instagram, Home, Users, FileText, Sun, Moon } from './Icons.tsx';
 import { Button } from './ui/Button.tsx';
 import { CreatorModal } from './CreatorModal.tsx';
 import { AnimatedHero } from './ui/animated-hero.tsx';
 import { TestimonialsSection } from './ui/testimonials-with-marquee.tsx';
 import { FloatingNav } from './ui/floating-navbar.tsx';
 import { Logo } from './Branding.tsx';
+import { useTheme } from '../ThemeContext';
 
 interface LandingPageProps {
   onLoginClick: () => void;
@@ -84,12 +85,17 @@ const FaqItem: React.FC<{ question: string; answer: string; isOpen: boolean; onC
 const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
   const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const { theme, setTheme } = useTheme();
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     alert("Thank you for your message! For this demo, please use the direct email link. Your form data has been logged to the console.");
     const formData = new FormData(e.target as HTMLFormElement);
     console.log(Object.fromEntries(formData.entries()));
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   const navItems = [
@@ -227,8 +233,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick }) => {
 
       </main>
 
-      <footer className="text-center p-8 text-sm text-zinc-500 dark:text-zinc-600 bg-zinc-100 dark:bg-black">
-        <p>
+      <footer className="flex flex-col items-center justify-center p-8 text-sm text-zinc-500 dark:text-zinc-600 bg-zinc-100 dark:bg-black gap-4">
+        {/* Mobile-only Theme Toggle */}
+        <div className="sm:hidden">
+           <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleTheme}
+              className="rounded-full flex items-center gap-2 bg-white dark:bg-zinc-900"
+          >
+              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          </Button>
+        </div>
+        <p className="text-center">
           © 2025 Miracle Analytics. The future of financial intelligence. A project by{' '}
           <button 
             onClick={() => setIsCreatorModalOpen(true)} 
